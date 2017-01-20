@@ -1,7 +1,104 @@
-This is the General Mediation Engine project. Work began on March 7th, 2014 by Justus Robertson.
+General Mediation Engine (GME)
+by Justus Robertson
 
--------------
-Install Notes
--------------
+  /$$$$$$                                                   /$$                        
+ /$$__  $$                                                 | $$                        
+| $$  \__/  /$$$$$$  /$$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$ | $$                        
+| $$ /$$$$ /$$__  $$| $$__  $$ /$$__  $$ /$$__  $$|____  $$| $$                        
+| $$|_  $$| $$$$$$$$| $$  \ $$| $$$$$$$$| $$  \__/ /$$$$$$$| $$                        
+| $$  \ $$| $$_____/| $$  | $$| $$_____/| $$      /$$__  $$| $$                        
+|  $$$$$$/|  $$$$$$$| $$  | $$|  $$$$$$$| $$     |  $$$$$$$| $$                        
+ \______/  \_______/|__/  |__/ \_______/|__/      \_______/|__/                        
+                                                                                       
+                                                                                       
+                                                                                       
+ /$$      /$$                 /$$ /$$             /$$     /$$                          
+| $$$    /$$$                | $$|__/            | $$    |__/                          
+| $$$$  /$$$$  /$$$$$$   /$$$$$$$ /$$  /$$$$$$  /$$$$$$   /$$  /$$$$$$  /$$$$$$$       
+| $$ $$/$$ $$ /$$__  $$ /$$__  $$| $$ |____  $$|_  $$_/  | $$ /$$__  $$| $$__  $$      
+| $$  $$$| $$| $$$$$$$$| $$  | $$| $$  /$$$$$$$  | $$    | $$| $$  \ $$| $$  \ $$      
+| $$\  $ | $$| $$_____/| $$  | $$| $$ /$$__  $$  | $$ /$$| $$| $$  | $$| $$  | $$      
+| $$ \/  | $$|  $$$$$$$|  $$$$$$$| $$|  $$$$$$$  |  $$$$/| $$|  $$$$$$/| $$  | $$      
+|__/     |__/ \_______/ \_______/|__/ \_______/   \___/  |__/ \______/ |__/  |__/      
+                                                                                       
+                                                                                       
+                                                                                       
+ /$$$$$$$$                     /$$                                                     
+| $$_____/                    |__/                                                     
+| $$       /$$$$$$$   /$$$$$$  /$$ /$$$$$$$   /$$$$$$                                  
+| $$$$$   | $$__  $$ /$$__  $$| $$| $$__  $$ /$$__  $$                                 
+| $$__/   | $$  \ $$| $$  \ $$| $$| $$  \ $$| $$$$$$$$                                 
+| $$      | $$  | $$| $$  | $$| $$| $$  | $$| $$_____/                                 
+| $$$$$$$$| $$  | $$|  $$$$$$$| $$| $$  | $$|  $$$$$$$                                 
+|________/|__/  |__/ \____  $$|__/|__/  |__/ \_______/                                 
+                     /$$  \ $$                                                         
+                    |  $$$$$$/                                                         
+                     \______/                                                          
 
-Be sure to check for line endings in the shell script file if FastDownward doesn't work. Bitbucket likes to change LF line endings to CRLF which clogs the pipeline.
+This is the General Mediation Engine (GME) project. 
+Work began on March 7th, 2014 by Justus Robertson.
+
+---------------
+
+0. REAMDE
+
+This is a software framework for producing interactive narratives using narrative mediation. This project also contains a text interface for the engine and a suite of unit tests.
+
+---------------
+
+1. Important Warning
+
+In order for the system to work correctly, it needs a planner to generate linear narratives. The system is compatible with an off the shelf planner, called Fast Downward, and a specialized narrative planner, called Glaive. GME users will have to install at least one of these two planners to run the framework.
+
+---------------
+
+2. Fast Downward Installation Instructions
+
+This section details how to install and run Fast Downward on a Windows 10 machine.
+
+Step 1: Download Fast Downward from its Git repository. I use commit number e6caa678ba36.
+https://github.com/danfis/fast-downward
+http://www.fast-downward.org/ObtainingAndRunningFastDownward
+
+Step 1: Install 32-bit Cygwin installer. Make sure it's the 32-bit installer, no matter what version of Windows you have!
+www.cygwin.com/install.html
+www.cygwin.com/setup-x86.exe
+
+Step 2: When running the installer, search for and install each of these packages:
+mercurial
+g++
+make
+python
+flex
+bison
+gawk
+gcc
+
+Step 3: Once installed, open Cygwin and navigate to Fast Downward's source directory. Type:
+cd /cygdrive/c/... path to the GME project .../fastdownward/src
+
+Step 4: Compile FastDownward by typing:
+./build_all
+
+---------------
+
+3. Glaive Installation Instructions
+
+This section details how to install and run Glaive.
+
+Step 1: Download the Glaive JAR file from this website:
+http://stephengware.com/projects/glaive/
+
+Step 2: Place the Glaive JAR file inside the GME project in a directory called 'Glaive'.
+
+Step 3: Create a folder in the Glaive directory called 'output'.
+
+---------------
+
+4. Contact
+
+Feel free to contact Justus Robertson at:
+
+jjrobert at ncsu.edu
+
+with any questions.
