@@ -1,0 +1,5 @@
+(define (problem rob)
+(:domain BANK)
+(:objects sam lobby gun1 owner outside vault-room vault gold1 gold2)
+(:init (at sam lobby) (has sam gold2) (has owner gold1) (thing gold1) (location vault-room) (location outside) (connected lobby outside) (character sam) (player sam) (location lobby) (has sam gun1) (connected vault-room lobby) (thing gold2) (character owner) (connected lobby vault-room) (connected outside lobby) (at vault vault-room) (gun gun1) (alive sam) (open vault) (alive owner) (at owner lobby))
+(:goal (AND (not (alive owner)) (open vault) (has owner gold1))))

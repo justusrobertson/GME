@@ -1,0 +1,7 @@
+This is the General Mediation Engine project. Work began on March 7th, 2014 by Justus Robertson.
+
+-------------
+Install Notes
+-------------
+
+Be sure to check for line endings in the shell script file if FastDownward doesn't work. Bitbucket likes to change LF line endings to CRLF which clogs the pipeline.
