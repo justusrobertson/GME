@@ -9,7 +9,7 @@ using Mediation.Planners;
 using Mediation.Enums;
 using Mediation.StateSpace;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class StateSpaceMediatorArthurTest

@@ -1,6 +1,6 @@
 (define (problem rob)
 (:domain ZOMBIE)
-(:objects ash linda evilspirit livingroom bedroom outside woodshed cellar cabinet key necronomicon boomstick axe )
+(:objects ash linda evilspirit livingroom bedroom outside woodshed cellar cabinet key necronomicon boomstick axe)
 (:init (connected outside livingroom)
  (location woodshed)
  (book necronomicon)

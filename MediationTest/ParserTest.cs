@@ -10,7 +10,7 @@ using Mediation.Enums;
 using Mediation.Interfaces;
 using Mediation.Planners;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class ParserTest

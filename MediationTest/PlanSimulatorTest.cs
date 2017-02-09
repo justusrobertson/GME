@@ -6,7 +6,7 @@ using Mediation.Interfaces;
 using Mediation.PlanTools;
 using Mediation.StateSpace;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class PlanSimulatorTest

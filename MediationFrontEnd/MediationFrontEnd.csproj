@@ -57,12 +57,9 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mediation">
-      <HintPath>..\Mediation\bin\Release\Mediation.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -76,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleGame\Game.cs" />
+    <Compile Include="ConsoleGame\MTGame.cs" />
     <Compile Include="Discourse\DiscourseGenerator.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -101,6 +99,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mediation\Mediation.csproj">
+      <Project>{42ab954e-0b08-4a48-86c8-b8090abe6c9f}</Project>
+      <Name>Mediation</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

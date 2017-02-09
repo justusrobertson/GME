@@ -8,7 +8,7 @@ using Mediation.PlanTools;
 using Mediation.Interfaces;
 using Mediation.StateSpace;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class StateSpaceToolsTest
@@ -159,7 +159,7 @@ namespace MediationTest
         [TestMethod]
         public void StateSpaceToolsGetAllPlayerActionsCountTest()
         {
-            Assert.AreEqual(72, StateSpaceTools.GetAllPlayerActions(testDomain, testProblem).Count);
+            Assert.AreEqual(72, StateSpaceTools.GetAllActions(testProblem.Player.ToLower(), testDomain, testProblem).Count);
         }
 
         [TestMethod]
@@ -346,6 +346,12 @@ namespace MediationTest
             newPlan.Initial.Table.Add(new Predicate("at", new List<ITerm> { new Term("hand", true), new Term("lake", true) }, true), true);
             List<StateSpaceEdge> actions = StateSpaceTools.GetAllPossibleActions(testDomain, testProblem, newPlan, newPlan.Initial as State);
             Assert.AreEqual(3, actions.Count);
+        }
+
+        [TestMethod]
+        public void StateSpaceToolsGetAllPossibleSamActionsTest()
+        {
+            Assert.AreEqual(1, StateSpaceTools.GetActions("sam", testDomain, testProblem, testState).Count);
         }
     }
 }

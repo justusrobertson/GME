@@ -7,6 +7,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Term : ITerm
     {
         private string variable;

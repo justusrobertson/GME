@@ -48,7 +48,7 @@ namespace MediationFrontEnd.Discourse
                         description += UppercaseFirst(character) + " has ";
                         for (int i = 0; i < objects.Count - 1; i++)
                             description += UppercaseFirst(objects[i]) + ", ";
-                        description += "and a" + UppercaseFirst(objects.Last());
+                        description += "and a " + UppercaseFirst(objects.Last() + ". ");
                     }
 
                     foreach (string obj in objects)
@@ -156,7 +156,7 @@ namespace MediationFrontEnd.Discourse
                 description += "You have ";
                 for (int i = 0; i < objects.Count - 1; i++)
                     description += objects[i] + ", ";
-                description += "and a" + objects.Last();
+                description += "and a " + objects.Last() + ". ";
             }
 
             foreach (string obj in objects)

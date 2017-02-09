@@ -12,7 +12,7 @@ namespace Mediation.StateSpace
 {
     public class StateSpaceNode
     {
-        private static int Counter = -1;
+        internal static int Counter = -1;
 
         public StateSpaceNode parent;
         public StateSpaceEdge incoming;
@@ -22,7 +22,31 @@ namespace Mediation.StateSpace
         public Hashtable children;
         public Plan plan;
         public Problem problem;
+        public Domain domain;
         public int id;
+        public bool satisfiesGoal;
+
+        public bool Goal
+        {
+            get
+            {
+                if (plan.Steps.Count == 0 && satisfiesGoal)
+                    return true;
+
+                return false;
+            }
+        }
+
+        public bool Incompatible
+        {
+            get
+            {
+                if (plan.Steps.Count == 0 && !satisfiesGoal)
+                    return true;
+
+                return false;
+            }
+        }
 
         public StateSpaceNode ()
         {
@@ -34,7 +58,9 @@ namespace Mediation.StateSpace
             children = new Hashtable();
             plan = new Plan();
             problem = new Problem();
+            domain = new Domain();
             id = System.Threading.Interlocked.Increment(ref Counter);
+            satisfiesGoal = false;
         }
 
         public StateSpaceNode (StateSpaceNode parent, StateSpaceEdge incoming, State state)
@@ -47,7 +73,9 @@ namespace Mediation.StateSpace
             children = new Hashtable();
             plan = new Plan();
             problem = new Problem();
+            domain = new Domain();
             id = System.Threading.Interlocked.Increment(ref Counter);
+            satisfiesGoal = false;
         }
 
         // Displays the contents of the action.

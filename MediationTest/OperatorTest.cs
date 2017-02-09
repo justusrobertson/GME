@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mediation.Interfaces;
 using Mediation.PlanTools;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class OperatorTest

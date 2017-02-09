@@ -3,7 +3,7 @@ setlocal
 
 if not exist "%~dpn0.sh" echo Script "%~dpn0.sh" not found & pause & exit 2
 
-set _CYGBIN=C:\cygwin\bin\
+set _CYGBIN=J:\Applications\cygwin\bin
 if not exist "%_CYGBIN%" echo Couldn't find Cygwin at "%_CYGBIN%" & pause & exit 3
 
 :: Resolve ___.sh to /cygdrive based *nix path and store in %_CYGSCRIPT%

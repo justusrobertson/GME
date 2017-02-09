@@ -26,6 +26,9 @@ namespace Mediation.Interfaces
         // Domains have a list of constant types.
         List<string> ConstantTypes { get; }
 
+        // Domains have a list of predicates.
+        List<IPredicate> Predicates { get; set; }
+
         // Object type/sub-type pairs can be added to the domain.
         void AddTypePair (string subType, string type);
 
@@ -43,5 +46,8 @@ namespace Mediation.Interfaces
 
         // The domain has a list of all constants associated with a type.
         List<string> GetConstantsOf(string type);
+
+        // Domains can be cloned.
+        Object Clone();
     }
 }

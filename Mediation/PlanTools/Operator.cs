@@ -9,6 +9,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Operator : IOperator
     {
         private static int Counter = -1;
@@ -18,6 +19,7 @@ namespace Mediation.PlanTools
         private List<IPredicate> effects;
         private List<IAxiom> conditionals;
         private List<ITerm> consenting;
+        private List<IPredicate> exceptionalEffects;
         private int id;
 
         private Hashtable bindings;
@@ -82,6 +84,13 @@ namespace Mediation.PlanTools
             set { conditionals = value; }
         }
 
+        // Access the operator's exceptional effect.
+        public List<IPredicate> ExceptionalEffects
+        {
+            get { return exceptionalEffects; }
+            set { exceptionalEffects = value; }
+        }
+
         // Access the operator's actor.
         public string Actor
         {
@@ -124,6 +133,7 @@ namespace Mediation.PlanTools
             conditionals = new List<IAxiom>();
             bindings = new Hashtable();
             id = System.Threading.Interlocked.Increment(ref Counter);
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator(string name)
@@ -134,6 +144,7 @@ namespace Mediation.PlanTools
             conditionals = new List<IAxiom>();
             bindings = new Hashtable();
             id = System.Threading.Interlocked.Increment(ref Counter);
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator(string name, List<IPredicate> preconditions, List<IPredicate> effects)
@@ -145,6 +156,7 @@ namespace Mediation.PlanTools
             bindings = new Hashtable();
             id = System.Threading.Interlocked.Increment(ref Counter);
             consenting = new List<ITerm>();
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator(Predicate predicate, List<IPredicate> preconditions, List<IPredicate> effects)
@@ -156,6 +168,7 @@ namespace Mediation.PlanTools
             bindings = new Hashtable();
             id = System.Threading.Interlocked.Increment(ref Counter);
             consenting = new List<ITerm>();
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator (string name, List<ITerm> terms, Hashtable bindings, List<IPredicate> preconditions, List<IPredicate> effects)
@@ -167,6 +180,7 @@ namespace Mediation.PlanTools
             this.bindings = bindings;
             id = System.Threading.Interlocked.Increment(ref Counter);
             consenting = new List<ITerm>();
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator(string name, List<ITerm> terms, Hashtable bindings, List<IPredicate> preconditions, List<IPredicate> effects, int id)
@@ -178,6 +192,7 @@ namespace Mediation.PlanTools
             this.bindings = bindings;
             this.id = id;
             consenting = new List<ITerm>();
+            exceptionalEffects = new List<IPredicate>();
         }
 
         public Operator(string name, List<ITerm> terms, Hashtable bindings, List<IPredicate> preconditions, List<IPredicate> effects, List<IAxiom> conditionals, int id)
@@ -189,6 +204,7 @@ namespace Mediation.PlanTools
             this.bindings = bindings;
             this.id = id;
             consenting = new List<ITerm>();
+            exceptionalEffects = new List<IPredicate>();
         }
 
         // Updates terms from a bindings table.
@@ -272,19 +288,20 @@ namespace Mediation.PlanTools
         // Updates the consenting agent bindings based on the terms.
         private void UpdateConsentingAgentBindings()
         {
-            // Loop through the consenting agents.
-            foreach (ITerm consenter in consenting)
-                // Loop through the operator's terms.
-                foreach (ITerm opTerm in Terms)
-                    // Check if the terms have matching variable names that are not null.
-                    if (consenter.Variable.Equals(opTerm.Variable) && !consenter.Variable.Equals(""))
-                    {
-                        // If so, bind the effect to the same constant.
-                        consenter.Constant = opTerm.Constant;
+            if (consenting != null)
+                // Loop through the consenting agents.
+                foreach (ITerm consenter in consenting)
+                    // Loop through the operator's terms.
+                    foreach (ITerm opTerm in Terms)
+                        // Check if the terms have matching variable names that are not null.
+                        if (consenter.Variable.Equals(opTerm.Variable) && !consenter.Variable.Equals(""))
+                        {
+                            // If so, bind the effect to the same constant.
+                            consenter.Constant = opTerm.Constant;
 
-                        // Go ahead and sync the term types too.
-                        consenter.Type = opTerm.Type;
-                    }
+                            // Go ahead and sync the term types too.
+                            consenter.Type = opTerm.Type;
+                        }
         }
 
         // Updates the bindings hashtable based on the terms.
@@ -325,6 +342,26 @@ namespace Mediation.PlanTools
 
             // Otherwise, return the term.
             return term.ToString();
+        }
+
+        // Check if a predicate is a conditional effect.
+        public bool IsConditional(Predicate effect)
+        {
+            // Loop through the regular effects.
+            foreach (IPredicate rEffect in Effects)
+                // If the two effects match...
+                if (rEffect.Equals(effect))
+                    return false;
+
+            // Loop through the conditionals.
+            foreach (IAxiom conditional in Conditionals)
+                // Loop through the effects.
+                foreach (IPredicate cEffect in conditional.Effects)
+                    // If the two effects match...
+                    if (cEffect.Equals(effect))
+                        return true;
+
+            throw new Exception("Predicate " + effect.ToString() + " is not an effect of this action.");
         }
 
         // A special method for displaying fully ground steps.
@@ -420,6 +457,32 @@ namespace Mediation.PlanTools
                 newConditionals = new List<IAxiom>();
 
             return new Operator(newName, newTerms, newBinds, newPreconditions, newEffects, newConditionals, ID);
+        }
+
+        // Creates the operator's template object.
+        public Object Template()
+        {
+            Operator clone = Clone() as Operator;
+            Hashtable newBinds = clone.Bindings;
+            List<string> keys = new List<string>();
+            foreach (string key in newBinds.Keys)
+                keys.Add(key);
+            foreach (string key in keys)
+                newBinds[key] = "";
+            clone.Bindings = newBinds;
+            foreach (IAxiom conditional in clone.Conditionals)
+            {
+                newBinds = conditional.Bindings;
+                keys = new List<string>();
+                foreach (string key in conditional.Bindings.Keys)
+                    keys.Add(key);
+                foreach (string key in keys)
+                    newBinds[key] = "";
+                conditional.Bindings = newBinds;
+
+                conditional.BindTerms();
+            }
+            return clone;
         }
     }
 }

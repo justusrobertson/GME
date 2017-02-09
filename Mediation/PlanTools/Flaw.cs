@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Flaw
     {
         public Predicate precondition;

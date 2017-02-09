@@ -7,6 +7,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     class Intention : IIntention
     {
         private string character;

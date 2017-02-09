@@ -8,7 +8,7 @@ namespace Mediation.Interfaces
 {
     interface IMediationEdge
     {
-        // Edges have actions.
+        // Edges have a player action.
         IOperator Action { get; set; }
     }
 }

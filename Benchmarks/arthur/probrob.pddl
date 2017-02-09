@@ -1,6 +1,6 @@
 (define (problem rob)
 (:domain ARTHUR)
-(:objects arthur merlin excalibur book spellbook ring clearing woods )
+(:objects arthur merlin excalibur book spellbook ring clearing woods)
 (:init (asleep merlin)
  (is ring thing)
  (location clearing)

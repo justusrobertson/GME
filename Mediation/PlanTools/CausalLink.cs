@@ -8,6 +8,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class CausalLink : IDependency
     {
         private Predicate predicate;

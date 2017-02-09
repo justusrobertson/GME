@@ -3,6 +3,7 @@
     public enum Planner
     {
         FastDownward,
+        FDMulti,
         Glaive
     }
 }

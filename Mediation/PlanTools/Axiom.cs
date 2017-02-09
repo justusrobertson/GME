@@ -9,6 +9,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Axiom : IAxiom
     {
         private List<ITerm> terms;
@@ -119,6 +120,55 @@ namespace Mediation.PlanTools
             return sb.ToString();
         }
 
+        // Checks if two operators are equal.
+        public override bool Equals(Object obj)
+        {
+            // Store the object an axiom
+            Axiom ax = obj as Axiom;
+
+            // If the number of preconditions are the same...
+            if (ax.Preconditions.Count == Preconditions.Count)
+            {
+                // Loop through the preconditions.
+                foreach (Predicate precondition in Preconditions)
+                    if (!ax.Preconditions.Contains(precondition))
+                        return false;
+
+                // If the number of effects are the same...
+                if (ax.Effects.Count == Effects.Count)
+                {
+                    // Loop through the effects.
+                    foreach (Predicate effect in Effects)
+                        if (!ax.Effects.Contains(effect))
+                            return false;
+
+                    // Otherwise, return true!
+                    return true;
+                }
+            }
+
+            // Otherwise, fail.
+            return false;
+        }
+
+        // Returns a hashcode.
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+
+                foreach (IPredicate pred in preconditions)
+                    hash = hash * 23 + pred.GetHashCode();
+
+                foreach (IPredicate pred in effects)
+                    hash = hash * 23 + pred.GetHashCode();
+
+                return hash;
+            }
+        }
+
         public Object Clone()
         {
             List<ITerm> newTerms = new List<ITerm>();
@@ -137,6 +187,20 @@ namespace Mediation.PlanTools
             newBindings = bindings.Clone() as Hashtable;
 
             return new Axiom(newTerms, newPreconditions, newEffects, newBindings);
+        }
+
+        public Object Template()
+        {
+            Axiom clone = Clone() as Axiom;
+            Hashtable newBinds = clone.Bindings;
+            List<string> keys = new List<string>();
+            foreach (string key in newBinds.Keys)
+                keys.Add(key);
+            foreach (string key in keys)
+                newBinds[key] = "";
+            clone.Bindings = newBinds;
+            clone.BindTerms();
+            return clone;
         }
     }
 }

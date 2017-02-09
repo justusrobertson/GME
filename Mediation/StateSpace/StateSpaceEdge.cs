@@ -15,6 +15,7 @@ namespace Mediation.StateSpace
     {
         private Operator action;
         private ActionType actionType;
+        private List<IOperator> systemActions;
 
         public CausalLink clobberedLink;
 
@@ -32,6 +33,13 @@ namespace Mediation.StateSpace
             set { actionType = value; }
         }
 
+        // Access the system actions.
+        public List<IOperator> SystemActions
+        {
+            get { return systemActions; }
+            set { systemActions = value; }
+        }
+
         public StateSpaceEdge ()
         {
             action = new Operator();
@@ -43,6 +51,7 @@ namespace Mediation.StateSpace
         {
             this.action = action as Operator;
             this.actionType = actionType;
+            this.systemActions = new List<IOperator>();
         }
 
         // Displays the contents of the action.

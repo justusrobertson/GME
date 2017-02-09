@@ -38,6 +38,9 @@ namespace MediationFrontEnd.ConsoleGame
         // The current mediation node.
         public static StateSpaceNode root;
 
+        // The raw input.
+        public static string input = "";
+
         // The input command.
         public static string command = "";
 
@@ -54,7 +57,7 @@ namespace MediationFrontEnd.ConsoleGame
         public static bool debug = false;
 
         // The current planner.
-        public static Planner planner = Planner.Glaive;
+        public static Planner planner = Planner.FastDownward;
 
         // Error responses.
         public static string[] responses =
@@ -196,7 +199,6 @@ namespace MediationFrontEnd.ConsoleGame
 
             // Welcome the player to the game.
             Console.WriteLine("Welcome to " + domain.Name);
-            Console.WriteLine();
 
             // Find the first state.
             state = plan.GetFirstState();
@@ -207,7 +209,14 @@ namespace MediationFrontEnd.ConsoleGame
             // Initialize a stopwatch for debugging.
             Stopwatch watch = new Stopwatch();
 
+            // Present information about the player.
+            command = "look";
+            arguments = new List<string> { "me" };
+            Look();
+            Console.WriteLine();
+
             // Present the initial state.
+            command = "";
             Look();
 
             // Loop while this is false.
@@ -226,7 +235,7 @@ namespace MediationFrontEnd.ConsoleGame
                 // Ask for input.
                 Console.WriteLine();
                 Console.Write(">");
-                string input = Console.ReadLine();
+                input = Console.ReadLine();
 
                 // If in debug mode, start the stop watch.
                 if (debug)
@@ -299,14 +308,14 @@ namespace MediationFrontEnd.ConsoleGame
                 }
 
                 // Check for goal state.
-                if (plan.Steps.Count == 0 && root.problem.Initial.Count > 0)
+                if (root.Goal)
                 {
                     Console.WriteLine("GOAL STATE");
                     Console.ReadKey();
                     exit = true;
                 }
-                // Check for error state.
-                else if (plan.Steps.Count == 0 && root.problem.Initial.Count == 0)
+                // Check for incompatible state.
+                else if (root.Incompatible)
                 {
                     Console.WriteLine("UNWINNABLE STATE");
                     Console.ReadKey();
@@ -366,15 +375,16 @@ namespace MediationFrontEnd.ConsoleGame
 
                         // Add the action to the output.
                         if (action.TermAt(0).Equals(problem.Player))
-                            Console.Out.Write("You ");
+                            Console.Out.WriteLine("You " + input);
                         else
+                        {
                             Console.Out.Write("You see " + action.TermAt(0) + " ");
-                        string[] splitName = action.Name.Split('-');
-                        Console.Out.Write(splitName[0] + " ");
-                        Console.Out.Write("to the ");
-                        for (int i = 1; i < action.Name.Count(x => x == '-') + 1; i++)
-                            Console.Out.Write(UppercaseFirst(action.TermAt(i)) + " ");
-                        Console.Out.WriteLine();
+                            string[] splitName = action.Name.Split('-');
+                            Console.Out.Write(splitName[0] + " ");
+                            for (int i = 1; i < action.Name.Count(x => x == '-') + 1; i++)
+                                Console.Out.Write(UppercaseFirst(action.TermAt(i)) + " ");
+                            Console.Out.WriteLine();
+                        }
 
                         // Add each action effect to the output.
                         foreach (Predicate effect in action.Effects)
@@ -458,6 +468,7 @@ namespace MediationFrontEnd.ConsoleGame
                     if (frontier.ContainsKey(edge))
                     {
                         root = frontier[edge] as StateSpaceNode;
+                        domain = root.domain;
                         problem = root.problem;
                         plan = root.plan;
                         state = root.state;
@@ -465,6 +476,7 @@ namespace MediationFrontEnd.ConsoleGame
                     else
                     {
                         root = StateSpaceMediator.ExpandTree(planner, domain, problem, plan, state, edge, 0);
+                        domain = root.domain;
                         problem = root.problem;
                         plan = root.plan;
                         state = root.state;
@@ -506,6 +518,7 @@ namespace MediationFrontEnd.ConsoleGame
                 if (frontier.ContainsKey(matchingEdge))
                 {
                     root = frontier[matchingEdge] as StateSpaceNode;
+                    domain = root.domain;
                     problem = root.problem;
                     plan = root.plan;
                     state = root.state;
@@ -514,6 +527,7 @@ namespace MediationFrontEnd.ConsoleGame
                 {
                     frontierThread.Abort();
                     root = StateSpaceMediator.ExpandTree(planner, domain, problem, plan, state, matchingEdge, 0);
+                    domain = root.domain;
                     problem = root.problem;
                     plan = root.plan;
                     state = root.state;
@@ -560,6 +574,7 @@ namespace MediationFrontEnd.ConsoleGame
                 if (frontier.ContainsKey(matchingEdge))
                 {
                     root = frontier[matchingEdge] as StateSpaceNode;
+                    domain = root.domain;
                     problem = root.problem;
                     plan = root.plan;
                     state = root.state;
@@ -568,6 +583,7 @@ namespace MediationFrontEnd.ConsoleGame
                 {
                     frontierThread.Abort();
                     root = StateSpaceMediator.ExpandTree(planner, domain, problem, plan, state, matchingEdge, 0);
+                    domain = root.domain;
                     problem = root.problem;
                     plan = root.plan;
                     state = root.state;
@@ -631,7 +647,27 @@ namespace MediationFrontEnd.ConsoleGame
         {
             List<string> segments = line.Split(' ').ToList();
             segments.RemoveAt(0);
-            return segments;
+            List<string> newSegs = new List<string>();
+            foreach (string seg in segments)
+                if (!IsPreposition(seg))
+                    newSegs.Add(seg);
+            return newSegs;
+        }
+
+        private static bool IsPreposition (string word)
+        {
+            List<string> prepositions = new List<string> 
+            {
+                "from",
+                "to",
+                "the",
+                "a",
+                "an",
+                "in"
+            };
+
+            string match = prepositions.FirstOrDefault(s => s.Contains(word));
+            return match != null;
         }
 
         static List<string> Wrap(string text, int margin)

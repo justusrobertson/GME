@@ -10,6 +10,7 @@ using Mediation.Enums;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Domain : IDomain
     {
         private string name;
@@ -17,6 +18,8 @@ namespace Mediation.PlanTools
         private List<IOperator> operators;
         private Hashtable objectTypes;
         private Hashtable constantTypes;
+        public string staticStart;
+        private List<IPredicate> predicates;
 
         // Access the domain's name.
         public string Name
@@ -67,6 +70,13 @@ namespace Mediation.PlanTools
             }
         }
 
+        // Domains have a list of predicates.
+        public List<IPredicate> Predicates
+        {
+            get { return predicates; }
+            set { predicates = value; }
+        }
+
         public Domain ()
         {
             name = "";
@@ -74,6 +84,17 @@ namespace Mediation.PlanTools
             operators = new List<IOperator>();
             objectTypes = new Hashtable();
             constantTypes = new Hashtable();
+            predicates = new List<IPredicate>();
+        }
+
+        public Domain(string name, PlanType type, List<IOperator> operators)
+        {
+            this.name = name;
+            this.type = type;
+            this.operators = operators;
+            objectTypes = new Hashtable();
+            constantTypes = new Hashtable();
+            predicates = new List<IPredicate>();
         }
 
         // Object type/sub-type pairs can be added to the domain.
@@ -176,6 +197,16 @@ namespace Mediation.PlanTools
             return new List<string>();
         }
 
+        // Returns the operator object that matches the string.
+        public IOperator GetOperator(string name)
+        {
+            foreach (IOperator op in operators)
+                if (op.Name.Equals(name))
+                    return op;
+
+            return null;
+        }
+        
         // Displays the contents of the domain.
         public override string ToString()
         {
@@ -187,6 +218,59 @@ namespace Mediation.PlanTools
                 sb.AppendLine(op.ToString());
 
             return sb.ToString();
+        }
+
+        // Creates a clone of the domain.
+        public Object Clone()
+        {
+            // Create a new name object.
+            string newName = name;
+
+            // Create a new plan type object.
+            PlanType newType = type;
+
+            // Create a new list of operator objects.
+            List<IOperator> newOperators = new List<IOperator>();
+            foreach (IOperator op in operators)
+                newOperators.Add(op.Clone() as Operator);
+
+            // Create a new domain object.
+            Domain newDomain = new Domain(newName, newType, newOperators);
+
+            // Load the object types hashtable into the new domain object.
+            foreach (string objectType in objectTypes.Keys)
+                newDomain.AddTypeList(objectTypes[objectType] as List<string>, objectType);
+
+            // Load the constant types hashtable into the new domain object.
+            foreach (string constantType in constantTypes.Keys)
+                newDomain.AddConstantsList(constantTypes[constantType] as List<string>, constantType);
+
+            foreach (IPredicate pred in predicates)
+                newDomain.predicates.Add(pred.Clone() as Predicate);
+
+            newDomain.staticStart = this.staticStart;
+
+            foreach (IPredicate pred in predicates)
+                newDomain.Predicates.Add(pred.Clone() as IPredicate);
+
+            // Return the new domain object.
+            return newDomain;
+        }
+
+        // Returns a hashcode.
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                hash = hash * 23 + Name.GetHashCode();
+
+                foreach (IOperator op in operators)
+                    hash = hash * 23 + op.GetHashCode();
+
+                return hash;
+            }
         }
     }
 }

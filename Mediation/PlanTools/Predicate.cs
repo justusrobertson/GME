@@ -9,6 +9,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Predicate : IPredicate
     {
         private string name;
@@ -220,6 +221,11 @@ namespace Mediation.PlanTools
             foreach (ITerm term in terms)
                 if (binds.ContainsKey(term.Variable))
                     term.Constant = binds[term.Variable] as string;
+        }
+
+        public void BindTerm (string constant, int position)
+        {
+            TermAt(position).Constant = constant;
         }
 
         // Displays the contents of the predicate.

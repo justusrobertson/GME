@@ -7,6 +7,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Obj : IObject
     {
         private string name;
@@ -37,6 +38,13 @@ namespace Mediation.PlanTools
         public Obj ()
         {
             name = "";
+            subType = "";
+            types = new List<string>();
+        }
+
+        public Obj(string name)
+        {
+            this.name = name;
             subType = "";
             types = new List<string>();
         }

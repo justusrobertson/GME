@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mediation.Interfaces;
 using Mediation.PlanTools;
 
-namespace MediationTests
+namespace Mediation.Testss
 {
     [TestClass]
     public class PredicateTest

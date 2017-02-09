@@ -30,7 +30,7 @@ namespace MediationFrontEnd
             Console.Out.WriteLine(plan);
             */
 
-            Game.Play();
+            MTGame.Play();
 
             //StateSpaceNode root = StateSpaceMediator.BuildTree(domain, problem, plan, plan.Initial as State, 2);
             //Writer.ToHTML(Parser.GetTopDirectory() + @"Output\", root);

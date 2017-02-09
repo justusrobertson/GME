@@ -10,6 +10,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class State : IState
     {
         public Operator lastStep;
@@ -69,6 +70,8 @@ namespace Mediation.PlanTools
             applicables = new List<Hashtable>();
             position = -1;
         }
+
+        public State(List<IPredicate> predicates) : this(predicates, null, null) { }
 
         public State(List<IPredicate> predicates, Operator lastStep, Operator nextStep)
         {
@@ -159,34 +162,42 @@ namespace Mediation.PlanTools
                 List<Hashtable> bindings = new List<Hashtable>();
                 Hashtable binding = new Hashtable();
 
-                for (int i = 0; i < conditional.Arity; i++)
+                if (conditional.Arity == 0)
                 {
-                    List<Hashtable> lastBindings = new List<Hashtable>();
-                    foreach (Hashtable lastBinding in bindings)
-                        lastBindings.Add(lastBinding.Clone() as Hashtable);
-
-                    List<Hashtable> newBindings = new List<Hashtable>();
-
-                    foreach (IObject obj in objects)
+                    Hashtable thisBind = action.Bindings.Clone() as Hashtable;
+                    bindings.Add(thisBind);
+                }
+                else
+                {
+                    for (int i = 0; i < conditional.Arity; i++)
                     {
-                        List<Hashtable> theseBindings = new List<Hashtable>();
-                        if (lastBindings.Count > 0)
-                            foreach (Hashtable bind in lastBindings)
+                        List<Hashtable> lastBindings = new List<Hashtable>();
+                        foreach (Hashtable lastBinding in bindings)
+                            lastBindings.Add(lastBinding.Clone() as Hashtable);
+
+                        List<Hashtable> newBindings = new List<Hashtable>();
+
+                        foreach (IObject obj in objects)
+                        {
+                            List<Hashtable> theseBindings = new List<Hashtable>();
+                            if (lastBindings.Count > 0)
+                                foreach (Hashtable bind in lastBindings)
+                                {
+                                    Hashtable thisBind = bind.Clone() as Hashtable;
+                                    thisBind.Add(conditional.TermAt(i), obj.Name);
+                                    theseBindings.Add(thisBind);
+                                }
+                            else
                             {
-                                Hashtable thisBind = bind.Clone() as Hashtable;
+                                Hashtable thisBind = action.Bindings.Clone() as Hashtable;
                                 thisBind.Add(conditional.TermAt(i), obj.Name);
                                 theseBindings.Add(thisBind);
                             }
-                        else
-                        {
-                            Hashtable thisBind = action.Bindings.Clone() as Hashtable;
-                            thisBind.Add(conditional.TermAt(i), obj.Name);
-                            theseBindings.Add(thisBind);
+                            newBindings.AddRange(theseBindings);
                         }
-                        newBindings.AddRange(theseBindings);
-                    }
 
-                    bindings = newBindings;
+                        bindings = newBindings;
+                    }
                 }
 
                 foreach (Hashtable bind in bindings)
@@ -390,7 +401,13 @@ namespace Mediation.PlanTools
             foreach (Hashtable applicable in applicables)
                 newApplicables.Add((Hashtable)applicable.Clone());
 
-            return new State((Hashtable)table.Clone(), (Operator)lastStep.Clone(), (Operator)nextStep.Clone(), newApplicables);
+            Operator newLastStep = new Operator();
+            if (lastStep != null) newLastStep = lastStep.Clone() as Operator;
+
+            Operator newNextStep = new Operator();
+            if (nextStep != null) newNextStep = nextStep.Clone() as Operator;
+
+            return new State((Hashtable)table.Clone(), newLastStep, newNextStep, newApplicables);
         }
     }
 }

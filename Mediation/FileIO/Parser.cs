@@ -11,12 +11,13 @@ using Mediation.Interfaces;
 using Mediation.PlanTools;
 
 using Mediation.Enums;
+using System;
 
 namespace Mediation.FileIO
 {
     public static class Parser
     {
-        public static string path = @"C:\MediationService\";
+        public static string path = @"J:\Code\Mediation\GME\";
 
         // Returns the project's top directory as a string.
         public static string GetTopDirectory ()
@@ -36,7 +37,7 @@ namespace Mediation.FileIO
             //return @"C:\MediationService\";
             //return @"J:\Code\Mediation\GME\";
             #if (DEBUG)
-                path = @"J:\Code\Mediation\GME\";
+                //path = @"J:\Code\Mediation\GME\";
             #endif
 
             if (path.Equals("")) return topDir;
@@ -188,7 +189,9 @@ namespace Mediation.FileIO
                         if (!word.Equals(""))
                         {
                             // Add the variable name for the current term.
-                            step.Terms.Add(new Term(temp.Predicate.TermAt(i).Variable, word, temp.Predicate.TermAt(i).Type));
+                            List<ITerm> terms = step.Terms;
+                            terms.Add(new Term(temp.Predicate.TermAt(i).Variable, word, temp.Predicate.TermAt(i).Type));
+                            step.Terms = terms;
 
                             // Iterate the counter.
                             i++;
@@ -248,6 +251,9 @@ namespace Mediation.FileIO
         // Reads in a domain from a file.
         public static Domain GetDomain (string file, PlanType type)
         {
+            bool readInStat = true;
+            int start = 0;
+
             // The domain object.
             Domain domain = new Domain();
 
@@ -268,7 +274,10 @@ namespace Mediation.FileIO
             {
                 // Set the domain name.
                 if (words[i].Equals("(domain"))
+                {
+                    start = i - 1;
                     domain.Name = words[i + 1].Remove(words[i + 1].Length - 1);
+                }
 
                 // Begin types definitions.
                 if (words[i].Equals("(:types"))
@@ -310,9 +319,44 @@ namespace Mediation.FileIO
                         }
                 }
 
+                // Begin predicates definitions.
+                if (words[i].Equals("(:predicates"))
+                {
+                    // If the list is not empty.
+                    if (!words[i + 1].Equals(")"))
+                        // Loop until list is finished.
+                        while ((words[i][words[i].Length - 1] != ')' || words[i][words[i].Length - 2] != ')')
+                                && (words[i][words[i].Length - 1] != ')' || !words[i + 1].Equals(")")))
+                        {
+                            Predicate pred = new Predicate();
+
+                            pred.Name = Regex.Replace(words[++i], @"\t|\n|\r|[()]", "");
+
+                            while (words[i][words[i].Length - 1] != ')')
+                            {
+                                Term term = new Term();
+                                term.Variable = Regex.Replace(words[++i], @"\t|\n|\r|[()]", "");
+                                if (Regex.Replace(words[i + 1], @"\t|\n|\r", "").Equals("-"))
+                                {
+                                    i++;
+                                    term.Type = Regex.Replace(words[++i], @"\t|\n|\r|[()]", "");
+                                    pred.Terms.Add(term);
+                                }
+                            }
+                            domain.Predicates.Add(pred);
+                        }
+                }
+
                 // Begin an action definition.
                 if (words[i].Equals("(:action"))
                 {
+                    if (readInStat)
+                    {
+                        for (int stat = start; stat < i; stat++)
+                            domain.staticStart += " " + words[stat];
+                        readInStat = false;
+                    }
+
                     IOperator temp = null;
 
                     if (type == PlanType.PlanSpace)
@@ -407,14 +451,17 @@ namespace Mediation.FileIO
                         {
                             // Check for a conditional effect.
                             // THIS SHOULD PROBABLY BE CONDENSED
-                            if (words[i].Equals("(forall"))
+                            if (words[i].Equals("(forall") || words[i].Equals("(when"))
                             {
                                 // Create a new axiom object.
                                 Axiom axiom = new Axiom();
                                 
-                                // Read in the axiom's terms.
-                                while (!Regex.Replace(words[++i], @"\t|\n|\r", "").Equals("(when"))
-                                    axiom.Terms.Add(new Term(Regex.Replace(words[i], @"\t|\n|\r|[()]", "")));
+                                if (words[i].Equals("(forall"))
+                                {
+                                    // Read in the axiom's terms.
+                                    while (!Regex.Replace(words[++i], @"\t|\n|\r", "").Equals("(when"))
+                                        axiom.Terms.Add(new Term(Regex.Replace(words[i], @"\t|\n|\r|[()]", "")));
+                                }
 
                                 // If the preconditions are conjunctive.
                                 if (Regex.Replace(words[++i], @"\t|\n|\r", "").Equals("(and"))
@@ -487,7 +534,7 @@ namespace Mediation.FileIO
                                             pred.Terms.Add(new Term(Regex.Replace(words[i++], @"\t|\n|\r|[()]", "")));
 
                                         // Read the last term.
-                                        pred.Terms.Add(new Term(Regex.Replace(words[i++], @"\t|\n|\r|[()]", "")));
+                                        pred.Terms.Add(new Term(Regex.Replace(words[i], @"\t|\n|\r|[()]", "")));
 
                                         // Add the predicate to the axiom's preconditions.
                                         axiom.Preconditions.Add(pred);
@@ -510,6 +557,8 @@ namespace Mediation.FileIO
                                             // Create new predicate.
                                             Predicate pred = new Predicate();
 
+                                            parenStack++;
+
                                             // Check for a negative effect.
                                             if (words[i].Equals("(not"))
                                             {
@@ -518,6 +567,8 @@ namespace Mediation.FileIO
 
                                                 // Set the effect's sign to false.
                                                 pred.Sign = false;
+
+                                                parenStack++;
                                             }
 
                                             // Name the predicate.
@@ -535,8 +586,16 @@ namespace Mediation.FileIO
                                         }
 
                                         // Check for a close paren.
-                                        if (words[i][words[i].Length - 1] == ')')
+                                        if (words[i - 1][words[i - 1].Length - 1] == ')')
                                             parenStack--;
+
+                                        if (words[i - 1].Length > 1)
+                                            if (words[i - 1][words[i - 1].Length - 2] == ')')
+                                                parenStack--;
+
+                                        if (words[i - 1].Length > 2)
+                                            if (words[i - 1][words[i - 1].Length - 3] == ')')
+                                                parenStack--;
                                     }
                                 }
                                 else
@@ -634,6 +693,9 @@ namespace Mediation.FileIO
                 }
             }
 
+            // Create a working copy of the domain file.
+            Writer.DomainToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\domrob.pddl", domain);
+
             return domain;
         }
 
@@ -681,8 +743,9 @@ namespace Mediation.FileIO
 
                                 // For all the stored objects...
                                 foreach (string tempObj in tempObjects)
-                                    // ... associate them with their type and add them to the problem.
-                                    problem.Objects.Add(new Obj(tempObj, type));
+                                    if (tempObj != "")
+                                        // ... associate them with their type and add them to the problem.
+                                        problem.Objects.Add(new Obj(tempObj, type));
 
                                 // Clear the temporary objects list.
                                 tempObjects = new List<string>();
@@ -690,7 +753,8 @@ namespace Mediation.FileIO
 
                     // Add objects with unspecified types to the problem.
                     foreach (string tempObj in tempObjects)
-                        problem.Objects.Add(new Obj(tempObj, ""));
+                        if (tempObj != "")
+                            problem.Objects.Add(new Obj(tempObj, ""));
 
                     // Add the initial state.
                     while (!Regex.Replace(words[i], @"\t|\n|\r", "").ToLower().Equals("(:goal"))

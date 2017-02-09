@@ -15,6 +15,10 @@ namespace Mediation.Planners
         // Creates and reads a plan into an object.
         public static Plan Plan(Domain domain, Problem problem)
         {
+            // Create new PDDL problem and domain files.
+            Writer.ProblemToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\probrob.pddl", domain, problem, problem.Initial);
+            Writer.DomainToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\domrob.pddl", domain);
+
             // Start Fast Downward's batch file.
             ProcessStartInfo startInfo = new ProcessStartInfo(Parser.GetTopDirectory() + @"\fastdownward.bat");
 

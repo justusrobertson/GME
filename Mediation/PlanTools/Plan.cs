@@ -3,43 +3,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Collections;
 
 using Mediation.Interfaces;
 
-
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Plan : IPlan
     {
         private Domain domain;
         private Problem problem;
         private List<IOperator> steps;
         private List<CausalLink> dependencies;
+        private List<CausalLink> trabassos;
+        private List<IOperator> trabassoSummary;
         private IState initial;
         private IState goal;
 
-        // Access the plans's domain.
+        // Access the plan's domain.
         public Domain Domain
         {
             get { return domain; }
             set { domain = value; }
         }
 
-        // Access the plans's problem.
+        // Access the plan's problem.
         public Problem Problem
         {
             get { return problem; }
             set { problem = value; }
         }
 
-        // Access the plans's steps.
+        // Access the plan's steps.
         public List<IOperator> Steps
         {
             get { return steps; }
             set { steps = value; }
         }
 
-        // Access the plans's dependencies.
+        // Access the plan's dependencies.
         public List<CausalLink> Dependencies
         {
             get 
@@ -51,6 +54,21 @@ namespace Mediation.PlanTools
                 return dependencies;
             }
             set { dependencies = value; }
+        }
+
+        // Access the plan's trabassos.
+        // Trabassos are dependencies with the added condition that the tail step must reverse the dependent literal.
+        public List<CausalLink> Trabassos
+        {
+            get
+            {
+                // If the trabassos are not initialized, create them.
+                if (trabassos == null)
+                    CreateTrabassos();
+
+                return trabassos;
+            }
+            set { trabassos = value; }
         }
 
         // Access the plan's initial state.
@@ -258,7 +276,7 @@ namespace Mediation.PlanTools
             return stateTree;
         }
 
-        // Draws dependencies between steps in an input plan.
+        // Draws dependencies between steps in the plan.
         private void CreateDependencies ()
         {
             // Reset the causal links.
@@ -303,7 +321,8 @@ namespace Mediation.PlanTools
                 // Start at the flaw's step,
                 // Loop backward to the initial step.
                 for (int i = allSteps.IndexOf(flaws.First().step) - 1; i >= 0; i--)
-                {// Loop through each step's effects.
+                {
+                    // Loop through each step's effects.
                     foreach (Predicate effect in allSteps[i].Effects)
                     {
                         // Check to see if the effect matches the flaw's predicate.
@@ -345,6 +364,191 @@ namespace Mediation.PlanTools
                 // Remove the current flaw from the list.
                 flaws.RemoveAt(0);
             }
+        }
+
+        // Draws trabasso dependencies between steps in the plan.
+        private void CreateTrabassos()
+        {
+            // Reset the causal links.
+            trabassos = new List<CausalLink>();
+
+            // Create an empty list of flaws.
+            List<Flaw> flaws = new List<Flaw>();
+
+            // Create a list of steps that includes the initial and goal steps.
+            List<Operator> allSteps = new List<Operator>();
+
+            // Add the initial step to the new list.
+            allSteps.Add(InitialStep);
+
+            // Loop through the plan's steps.
+            foreach (Operator step in steps)
+            {
+                // Add the current step to the new list.
+                allSteps.Add(step);
+
+                // Add every precondition to the flaw list.
+                foreach (Predicate precon in step.Preconditions)
+                    flaws.Add(new Flaw(precon, step));
+            }
+
+            // Add the goal step to the new list.
+            allSteps.Add(GoalStep);
+
+            // Add every goal precondition to the flaw list.
+            foreach (Predicate precon in GoalStep.Preconditions)
+                flaws.Add(new Flaw(precon, GoalStep));
+
+            // Resolve every flaw.
+            while (flaws.Count > 0)
+            {
+                List<IOperator> span = new List<IOperator>();
+                span.Add(flaws.First().step.Clone() as Operator);
+
+                Operator found = null;
+
+                Predicate literal = flaws.First().precondition.Clone() as Predicate;
+
+                // Loop through the steps:
+                // Start at the flaw's step,
+                // Loop backward to the initial step.
+                for (int i = allSteps.IndexOf(flaws.First().step) - 1; i >= 0; i--)
+                {
+                    // Loop through each step's effects.
+                    foreach (Predicate effect in allSteps[i].Effects)
+                    {
+                        if (literal.Equals(effect))
+                                found = allSteps.ElementAt(i).Clone() as Operator;
+
+                        if (found != null)
+                        {
+                            // Check to see if the effect matches the flaw's predicate.
+                            if (literal.IsInverse(effect))
+                            {
+                                // Create a new causal link object.
+                                CausalLink link = new CausalLink();
+
+                                // Set the link's predicate to the flaw's precondition.
+                                link.Predicate = flaws[0].precondition;
+
+                                // Set the link's head to the flaw's step.
+                                link.Head = flaws[0].step;
+
+                                // Set the link's tail to the effect step.
+                                link.Tail = found;
+
+                                // Set the link's span.
+                                link.Span = span;
+
+                                // Add the causal link to the list of links.
+                                trabassos.Add(link);
+
+                                // Exit the loop.
+                                i = 0;
+
+                                found = null;
+                            }
+                        }
+                    }
+
+                    span.Add(allSteps.ElementAt(i).Clone() as Operator);
+                }
+
+                // If a step was not found with an effect of the reverse literal...
+                // Check to see if the reverse exists in the initial state.
+                if (found != null)
+                {
+                    // A boolean that tracks whether the reversed literal was found in the initial state.
+                    bool inInitial = false;
+
+                    if (literal.Sign)
+                    {
+                        // Loop through the initial state literals and check to see if the reversed literal exists.
+                        foreach (Predicate init in initial.Predicates)
+                            if (literal.Equals(init))
+                                inInitial = true;    
+                    }
+                    else
+                    {
+                        inInitial = true;
+
+                        // Loop through the initial state literals and check to see if the reversed literal exists.
+                        foreach (Predicate init in initial.Predicates)
+                            if (literal.IsInverse(init))
+                                inInitial = false;    
+                    }       
+                    
+                    // If the literal was not enabled in the initial state, add it.
+                    if(!inInitial)
+                            trabassos.Add(new CausalLink(flaws.First().precondition, flaws.First().step, found, span));
+                }
+
+                // Remove the current flaw from the list.
+                flaws.RemoveAt(0);
+            }
+        }
+
+        // Calculates the plan's Trabasso summary.
+        // A Trabasso summary is the subset of plan steps that have a higher than average causal in/out degree.
+        public List<IOperator> GetTrabassoSummary()
+        {
+            // Hashtables to store in and out degree.
+            Hashtable inD = new Hashtable();
+            Hashtable outD = new Hashtable();
+
+            // A counter for total plan degree.
+            int degreeCount = 0;
+
+            // Loop through the Trabasso links in the plan.
+            foreach (IDependency trabasso in Trabassos)
+            {
+                // Initialize the Trabasso link's head in-degree record.
+                if (!inD.ContainsKey(trabasso.Head))
+                    inD[trabasso.Head] = 0;
+
+                // Iterate the Trabasso link's head in-degree count.
+                inD[trabasso.Head] = (int)inD[trabasso.Head] + 1;
+
+                // If the Trabasso link's head is not the goal.
+                if (!trabasso.Head.Name.Equals("goal"))
+                    // Iterate the total degrees.
+                    degreeCount++;
+
+                // Initialize the Trabasso link's tail out-degree record.
+                if (!outD.ContainsKey(trabasso.Tail))
+                    outD[trabasso.Tail] = 0;
+
+                // Iterate the Trabasso link's tail out-degree record.
+                outD[trabasso.Tail] = (int)outD[trabasso.Tail] + 1;
+                degreeCount++;
+            }
+
+            // Calculate the average in/out degree.
+            float avgDegree = (float)degreeCount / Steps.Count;
+
+            // Create a collection for the summary.
+            List<IOperator> summary = new List<IOperator>();
+
+            // Iterate through the plan steps.
+            foreach (IOperator step in Steps)
+            {
+                // Store the step's total degree.
+                int totalDegree = 0;
+
+                // If the step has an in-degree, store it.
+                if (inD.ContainsKey(step))
+                    totalDegree += (int)inD[step];
+
+                // If the step has an out-degree store it.
+                if (outD.ContainsKey(step))
+                    totalDegree += (int)outD[step];
+
+                // If the step has an average or higher degree, add it to the collection.
+                if (totalDegree >= avgDegree)
+                    summary.Add(step);
+            }
+
+            return summary;
         }
 
         // Displays the contents of the plan.

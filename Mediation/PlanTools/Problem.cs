@@ -9,6 +9,7 @@ using Mediation.Interfaces;
 
 namespace Mediation.PlanTools
 {
+    [Serializable]
     public class Problem : IProblem
     {
         private string name;
@@ -20,6 +21,7 @@ namespace Mediation.PlanTools
         private List<IIntention> intentions;
         private List<IPredicate> goal;
         private Hashtable typeList;
+        private Hashtable objectsByType;
 
         // Access the problem's name.
         public string Name
@@ -108,6 +110,51 @@ namespace Mediation.PlanTools
             }
         }
 
+        // A hashtable that maps types to object names.
+        public Hashtable ObjectsByType
+        {
+            get
+            {
+                if (objectsByType != null) return objectsByType;
+
+                objectsByType = new Hashtable();
+
+                foreach (IObject obj in objects)
+                {
+                    foreach (string type in obj.Types)
+                    {
+                        if (objectsByType.ContainsKey(type))
+                        {
+                            List<string> objList = objectsByType[type] as List<string>;
+                            objList.Add(obj.Name);
+                            objectsByType[type] = objList;
+                        }
+                        else
+                        {
+                            List<string> objList = new List<string>();
+                            objList.Add(obj.Name);
+                            objectsByType[type] = objList;
+                        }
+                    }
+
+                    if (objectsByType.ContainsKey(obj.SubType))
+                    {
+                        List<string> objList = objectsByType[obj.SubType] as List<string>;
+                        objList.Add(obj.Name);
+                        objectsByType[obj.SubType] = objList;
+                    }
+                    else
+                    {
+                        List<string> objList = new List<string>();
+                        objList.Add(obj.Name);
+                        objectsByType[obj.SubType] = objList;
+                    }
+                }
+
+                return objectsByType;
+            }
+        }
+
         public Problem ()
         {
             name = "";
@@ -180,6 +227,71 @@ namespace Mediation.PlanTools
                 sb.AppendLine(pred.ToString());
 
             return sb.ToString();
+        }
+
+        // Creates a clone of the problem.
+        public Object Clone()
+        {
+            // Create a new name object.
+            string newName = name;
+
+            // Create a new original name object.
+            string newOriginalName = originalName;
+
+            // Create a new domain name object.
+            string newDomain = domain;
+
+            // Create a new player name object.
+            string newPlayer = player;
+
+            // Create a new list of object objects.
+            List<IObject> newObjects = new List<IObject>();
+            foreach (IObject ob in objects)
+                newObjects.Add(ob.Clone() as Obj);
+
+            // Create a new list of intention objects.
+            List<IIntention> newIntentions = new List<IIntention>();
+            foreach (IIntention intention in intentions)
+                newIntentions.Add(intention.Clone() as Intention);
+
+            // Create a new list of initial state predicate objects.
+            List<IPredicate> newInitial = new List<IPredicate>();
+            foreach (IPredicate pred in initial)
+                newInitial.Add(pred.Clone() as Predicate);
+
+            // Create a new list of goal state predicate objects.
+            List<IPredicate> newGoal = new List<IPredicate>();
+            foreach (IPredicate pred in goal)
+                newGoal.Add(pred.Clone() as Predicate);
+
+            // Return the new domain object.
+            return new Problem (newName, newOriginalName, newDomain, newPlayer, newObjects, newInitial, newIntentions, newGoal);
+        }
+
+        // Returns a hashcode.
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                hash = hash * 23 + OriginalName.GetHashCode();
+                hash = hash * 23 + Domain.GetHashCode();
+
+                foreach (IObject obj in objects)
+                    hash = hash * 23 + obj.GetHashCode();
+
+                foreach (IIntention intention in intentions)
+                    hash = hash * 23 + intention.GetHashCode();
+
+                foreach (IPredicate pred in initial)
+                    hash = hash * 23 + pred.GetHashCode();
+
+                foreach (IPredicate pred in goal)
+                    hash = hash * 23 + pred.GetHashCode();
+
+                return hash;
+            }
         }
     }
 }

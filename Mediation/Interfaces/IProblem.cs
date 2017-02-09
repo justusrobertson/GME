@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Mediation.Interfaces
 {
-    interface IProblem
+    public interface IProblem
     {
         // Problems have a name.
         string Name { get; set; }
@@ -32,5 +32,8 @@ namespace Mediation.Interfaces
 
         // Problems have a goal state.
         List<IPredicate> Goal { get; set; }
+
+        // Problems can be cloned.
+        Object Clone();
     }
 }

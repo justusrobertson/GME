@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,9 @@ namespace Mediation.Interfaces
         // Axioms have effects.
         List<IPredicate> Effects { get; set; }
 
+        // Axioms have bindings.
+        Hashtable Bindings { get; set; }
+
         // Axioms have arity.
         int Arity { get; }
 
@@ -30,5 +34,8 @@ namespace Mediation.Interfaces
 
         // An axiom can clone itself.
         Object Clone();
+
+        // An axiom knows its template form.
+        Object Template();
     }
 }

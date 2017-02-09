@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Mediation.PlanTools;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class CausalLinkTest

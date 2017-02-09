@@ -27,7 +27,7 @@ namespace Mediation.StateSpace
                     newPlan.Steps.RemoveAt(0);
 
                     // Update the world state and recursively call the function.
-                    return VerifyPlan(newPlan, state.NewState(plan.Steps.First() as Operator, objects), objects);
+                    return VerifyPlan(newPlan, state.NewState(plan.Steps.First().Clone() as Operator, objects), objects);
                 }
                 else
                     // This is not a valid plan.

@@ -31,6 +31,9 @@ namespace Mediation.Interfaces
         // Actions have conditional effects.
         List<IAxiom> Conditionals { get; set; }
 
+        // Exceptional actions have exceptional effects.
+        List<IPredicate> ExceptionalEffects { get; set; }
+
         // Actions have an actor.
         string Actor { get; }
 
@@ -45,5 +48,7 @@ namespace Mediation.Interfaces
 
         // Actions can be cloned.
         Object Clone();
+
+        Object Template();
     }
 }

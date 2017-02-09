@@ -66,7 +66,8 @@ namespace Mediation.PlanSpace
             List<IPredicate> initial = flaw.state.ApplyAction(flaw.action, problem.Objects);
 
             // Create a new PDDL problem file based on this state.
-            Writer.ToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\probrob.pddl", domain, problem, initial);
+            Writer.ProblemToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\probrob.pddl", domain, problem, initial);
+            Writer.DomainToPDDL(Parser.GetTopDirectory() + @"Benchmarks\" + domain.Name.ToLower() + @"\domrob.pddl", domain);
 
             // Create and populate a problem object based on the new file.
             return new Problem ("rob", problem.OriginalName, problem.Domain, problem.Player, problem.Objects, initial, problem.Goal);

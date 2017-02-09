@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mediation.PlanTools;
 using Mediation.Interfaces;
 
-namespace MediationTest
+namespace Mediation.Tests
 {
     [TestClass]
     public class PlanTest
@@ -105,6 +105,18 @@ namespace MediationTest
         public void PlanDependenciesTypeTest()
         {
             Assert.IsInstanceOfType(testPlan.Dependencies[0], typeof(CausalLink));
+        }
+
+        [TestMethod]
+        public void PlanTrabassosTest()
+        {
+            Assert.AreEqual(2, testPlan.Trabassos.Count);
+        }
+
+        [TestMethod]
+        public void TrabassoSummaryTest()
+        {
+            Assert.AreEqual(testPlan.GetTrabassoSummary().Count, 1);
         }
     }
 }

@@ -65,7 +65,12 @@
     <Compile Include="Enums\ActionType.cs" />
     <Compile Include="Enums\Planner.cs" />
     <Compile Include="Enums\PlanType.cs" />
+    <Compile Include="FileIO\BinarySerializer.cs" />
     <Compile Include="FileIO\Writer.cs" />
+    <Compile Include="GameTree\GameTree.cs" />
+    <Compile Include="GameTree\MCTS.cs" />
+    <Compile Include="GameTree\GameTreeEdge.cs" />
+    <Compile Include="GameTree\GameTreeNode.cs" />
     <Compile Include="Interfaces\IAxiom.cs" />
     <Compile Include="Interfaces\IDependency.cs" />
     <Compile Include="Interfaces\IIntention.cs" />
@@ -79,7 +84,15 @@
     <Compile Include="Interfaces\IState.cs" />
     <Compile Include="Interfaces\ITerm.cs" />
     <Compile Include="KnowledgeTools\KnowledgeAnnotator.cs" />
+    <Compile Include="MediationTree\DomainRevisor.cs" />
+    <Compile Include="MediationTree\EventRevisor.cs" />
+    <Compile Include="MediationTree\MediationTree.cs" />
+    <Compile Include="MediationTree\MediationTreeData.cs" />
+    <Compile Include="MediationTree\MediationTreeEdge.cs" />
+    <Compile Include="MediationTree\MediationTreeNode.cs" />
+    <Compile Include="Planners\FDMulti.cs" />
     <Compile Include="Planners\Glaive.cs" />
+    <Compile Include="Planners\PlannerInterface.cs" />
     <Compile Include="PlanSpace\PlanSpaceEdge.cs" />
     <Compile Include="PlanSpace\PlanSpaceNode.cs" />
     <Compile Include="PlanSpace\PlanSpaceTools.cs" />
@@ -103,7 +116,10 @@
     <Compile Include="StateSpace\StateSpaceEdge.cs" />
     <Compile Include="StateSpace\StateSpaceMediator.cs" />
     <Compile Include="StateSpace\StateSpaceNode.cs" />
+    <Compile Include="StateSpace\StateSpaceSearchTools.cs" />
     <Compile Include="StateSpace\StateSpaceTools.cs" />
+    <Compile Include="Utilities\EnumerableExtension.cs" />
+    <Compile Include="Utilities\Tuple.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
