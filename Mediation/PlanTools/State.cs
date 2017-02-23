@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 
 using Mediation.Interfaces;
-
+using Mediation.Utilities;
 
 namespace Mediation.PlanTools
 {
@@ -49,6 +49,8 @@ namespace Mediation.PlanTools
                         // Store the predicate in the list.
                         predicates.Add(predicate);
 
+                predicates.Sort(PredicateComparer.InverseCompareByName);
+
                 // Return the list.
                 return predicates;
             }
@@ -57,8 +59,9 @@ namespace Mediation.PlanTools
             {
                 // Loop through the predicates.
                 foreach (IPredicate predicate in value)
-                    // And insert them in the new hashtable.
-                    table.Add(predicate, true);
+                    if (!table.ContainsKey(predicate))
+                        // And insert them in the new hashtable.
+                        table.Add(predicate, true);
             }
         }
 
@@ -123,11 +126,46 @@ namespace Mediation.PlanTools
             }
         }
 
+        public bool SuperposedInState (IPredicate predicate)
+        {
+            if (predicate.Sign)
+            {
+                if (table.ContainsKey(predicate))
+                    return (bool)table[predicate];
+                else
+                    return false;
+            }
+            else
+            {
+                Predicate reversed = predicate.Clone() as Predicate;
+                reversed.Sign = true;
+                if (table.ContainsKey(reversed))
+                    return (bool)table[reversed];
+                else
+                    return false;
+            }
+        }
+
         // Checks to see if the state contains certain predicates.
         public bool Satisfies (List<IPredicate> predicates)
         {
             foreach (IPredicate predicate in predicates)
                 if (!InState(predicate))
+                    return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks to see if a superposition contains certain predicates.
+        /// </summary>
+        /// <param name="predicates">The formulae that must be determined.</param>
+        /// <param name="superposition">The maybe state.</param>
+        /// <returns></returns>
+        public bool Satisfies (List<IPredicate> predicates, State superposition)
+        {
+            foreach (IPredicate predicate in predicates)
+                if (!InState(predicate) && !superposition.SuperposedInState(predicate))
                     return false;
 
             return true;
@@ -332,6 +370,18 @@ namespace Mediation.PlanTools
             return;
         }
 
+        public List<IPredicate> Difference (State other)
+        {
+            List<IPredicate> difference = new List<IPredicate>();
+            foreach (Predicate pred in Predicates)
+                if (!other.InState(pred)) difference.Add(pred);
+
+            foreach (Predicate pred in other.Predicates)
+                if (!InState(pred)) difference.Add(pred);
+
+            return difference;
+        }
+
         // Displays the contents of the state.
         public string ToStringDescriptive()
         {
@@ -395,7 +445,7 @@ namespace Mediation.PlanTools
         }
 
         // Creates a clone of the state.
-        public Object Clone ()
+        public virtual Object Clone ()
         {
             List<Hashtable> newApplicables = new List<Hashtable>();
             foreach (Hashtable applicable in applicables)

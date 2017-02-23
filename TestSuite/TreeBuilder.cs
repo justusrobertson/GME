@@ -16,8 +16,14 @@ namespace TestSuite
 {
     class TreeBuilder
     {
-        public static void MediationTreeBuilder (string domainName, int expand)
+        public static void MediationTreeBuilder (string domainName, int expand, bool domainRevision, bool eventRevision, bool superposition)
         {
+            string modifier = "vanilla";
+            if (domainRevision && eventRevision) modifier = "domain-event";
+            else if (domainRevision) modifier = "domain";
+            else if (eventRevision) modifier = "event";
+            else if (superposition) modifier = "superposition";
+
             // Parse the domain file.
             Domain domain = Parser.GetDomain(Parser.GetTopDirectory() + @"Benchmarks\" + domainName + @"\domain.pddl", PlanType.StateSpace);
 
@@ -25,10 +31,10 @@ namespace TestSuite
             Problem problem = Parser.GetProblemWithTypes(Parser.GetTopDirectory() + @"Benchmarks\" + domainName + @"\prob01.pddl", domain);
 
             // Create the initial node of mediation space.
-            MediationTree tree = new MediationTree (domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\");
+            MediationTree tree = new MediationTree (domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\" + modifier + @"\", domainRevision, eventRevision, superposition);
 
             // Remember the game tree path.
-            string dataPath = Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\";
+            string dataPath = Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + modifier + @"\";
 
             // Check each path to see if it exists. If not, create the folder.
             if (!File.Exists(dataPath))
@@ -48,6 +54,7 @@ namespace TestSuite
                 data.nodeCounter = 1;
                 data.goalStateCount = 0;
                 data.deadEndCount = 0;
+                data.summarySkip = 1000;
                 data.summaries = new List<List<Tuple<string, string>>>();
             }
 
@@ -65,16 +72,22 @@ namespace TestSuite
                     if (child.DeadEnd) data.deadEndCount++;
                     data.frontier.Add(child.ID);
                     expand--;
+                    watch.Stop();
+                    if (data.nodeCounter % data.summarySkip == 0) data.summaries.Add(WriteTree(domainName, data));
+                    watch.Start();
                 }
                 data.frontier.RemoveAt(0);
                 data.elapsedMilliseconds += watch.ElapsedMilliseconds;
                 watch.Reset();
                 BinarySerializer.SerializeObject<TestData>(dataPath + "mediationtreedata", data);
+                watch.Start();
             }
 
             watch.Stop();
-            data.summaries.Add(WriteTree(domainName, data));
+            int size = data.summaries.Count + 1;
             BinarySerializer.SerializeObject<TestData>(dataPath + "mediationtreedata", data);
+            WriteSummary(domainName + @"\" + modifier, data.nodeCounter.ToString(), data.summaries);
+            if (data.summaries.Count > 0) Grapher.CreateGraphs(domainName, data.nodeCounter.ToString(), size, dataPath, data.summaries);
         }
 
         // Creates a single tree of specified depth without specifying a folder name.
@@ -205,7 +218,7 @@ namespace TestSuite
             WriteSummary(domainName, timeStamp, summaries);
 
             // Use the CSV file to create an Excel spreadsheet and graphs of each summary element.
-            Grapher.CreateGraphs(domainName, timeStamp, endDepth + 2, summaries);
+            Grapher.CreateGraphs(domainName, timeStamp, endDepth + 2, Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + timeStamp + @"\", summaries);
         }
 
         // Creates multiple tree depths, starting with zero.
@@ -238,7 +251,7 @@ namespace TestSuite
             WriteSummary(domainName, timeStamp, summaries);
 
             // Use the CSV file to create an Excel spreadsheet and graphs of each summary element.
-            Grapher.CreateGraphs(domainName, timeStamp, endDepth - startDepth + 2, summaries);
+            Grapher.CreateGraphs(domainName, timeStamp, endDepth - startDepth + 2, Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + timeStamp + @"\", summaries);
         }
 
         // Creates a single tree of specified depth without specifying a folder name.
@@ -451,7 +464,7 @@ namespace TestSuite
 
         static void Main (string[] args)
         {
-            MediationTreeBuilder("spy-types", 10);
+            MediationTreeBuilder("spy-types", 9000, false, false, true);
         }
     }
 }

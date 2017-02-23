@@ -45,6 +45,8 @@ namespace Mediation.Interfaces
         // Displays the content of the predicate without a not.
         string ToStringPositive();
 
+        IPredicate GetReversed();
+
         // Predicates can be cloned.
         Object Clone();
     }

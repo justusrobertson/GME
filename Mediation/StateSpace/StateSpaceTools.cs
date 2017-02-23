@@ -133,6 +133,17 @@ namespace Mediation.StateSpace
             return satisfiedActions;
         }
 
+        // Finds all possible actions for the given character and state.
+        public static List<Operator> GetActions (string character, Domain domain, Problem problem, Superposition superposition)
+        {
+            List<Operator> satisfiedActions = new List<Operator>();
+
+            foreach (State state in superposition.States)
+                satisfiedActions.AddRange(GetActions(character, domain, problem, state));
+
+            return satisfiedActions.Distinct<Operator>().ToList<Operator>();
+        }
+
         // Given a state, return the spanning causal links.
         public static List<CausalLink> GetSpanningLinks (Plan plan)
         {
@@ -225,9 +236,11 @@ namespace Mediation.StateSpace
                         i = plan.Steps.Count;
                     }
             }
-            
+
             // Otherwise, return a blank step as the user's constituent action.
-            return new StateSpaceEdge(new Operator("do nothing"), ActionType.Constituent);
+            Operator wait = new Operator("do nothing");
+            wait.Terms.Add(new Term("actor", problem.Player, "character"));
+            return new StateSpaceEdge(wait, ActionType.Constituent);
         }
 
         // Get the set of exceptional and constituent edges.
@@ -413,7 +426,9 @@ namespace Mediation.StateSpace
             }
 
             // Otherwise, return a blank step as the user's constituent action.
-            return new MediationTreeEdge (new Operator("do nothing"), ActionType.Constituent, node.ID);
+            Operator wait = new Operator("do nothing");
+            wait.Terms.Add(new Term("actor", actor, "character"));
+            return new MediationTreeEdge (wait, ActionType.Constituent, node.ID);
         }
 
         // Creates a list of all possible things the player can do.
@@ -426,7 +441,11 @@ namespace Mediation.StateSpace
         public static List<MediationTreeEdge> GetAllPossibleActions(string character, MediationTreeNode node)
         {
             // Create a list of possible player actions in the current state.
-            List<Operator> possibleActions = GetActions (character, node.Domain, node.Problem, node.State);
+            List<Operator> possibleActions = new List<Operator>();
+
+            if (node is VirtualMediationTreeNode) possibleActions = GetActions(character, node.Domain, node.Problem, node.State as Superposition);
+            else possibleActions = GetActions(character, node.Domain, node.Problem, node.State);
+
 
             // Create a list of the causal links that span the state.
             List<CausalLink> spanningLinks = (List<CausalLink>)GetSpanningLinks(node.Plan);

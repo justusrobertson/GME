@@ -296,6 +296,13 @@ namespace Mediation.PlanTools
             return sb.ToString();
         }
 
+        public IPredicate GetReversed()
+        {
+            IPredicate clone = Clone() as IPredicate;
+            clone.Sign = !clone.Sign;
+            return clone;
+        }
+
         // Creates a clone of the predicate.
         public Object Clone()
         {

@@ -26,7 +26,7 @@ namespace MediationTest
             testDomainDirectory = Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl";
             testDomain = Parser.GetDomain(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl", PlanType.StateSpace);
             testProblem = Parser.GetProblemWithTypes(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\prob01.pddl", testDomain);
-            path = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\";
+            path = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\event\";
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ namespace MediationTest
 
         private MediationTreeNode BuildTree ()
         {
-            tree = new MediationTree(testDomain, testProblem, path);
+            tree = new MediationTree(testDomain, testProblem, path, false, true);
             MediationTreeNode child = tree.GetNode(tree.Root.Domain, tree.Root.Problem, tree.Root.Outgoing.Find(x => x.Action.Name.Equals("move-location") && x.Action.TermAt(1).Equals("right")));
 
             child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("move-location")));

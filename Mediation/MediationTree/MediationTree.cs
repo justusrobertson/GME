@@ -8,6 +8,8 @@ using Mediation.FileIO;
 using Mediation.Utilities;
 using Mediation.Enums;
 using System.IO;
+using Mediation.KnowledgeTools;
+using Mediation.Interfaces;
 
 namespace Mediation.MediationTree
 {
@@ -92,22 +94,45 @@ namespace Mediation.MediationTree
         /// <param name="domain">The base domain object.</param>
         /// <param name="problem">The base problem object.</param>
         /// <param name="path">The path used to save files to disk.</param>
-        public MediationTree (Domain domain, Problem problem, string path)
+        public MediationTree (Domain domain, Problem problem, string path) : this (domain, problem, path, true, true, true) { }
+
+        /// <summary>
+        /// The base constructor.
+        /// </summary>
+        /// <param name="planner">The planner to use.</param>
+        /// <param name="domain">The base domain object.</param>
+        /// <param name="problem">The base problem object.</param>
+        /// <param name="path">The path used to save files to disk.</param>
+        /// <param name="domainRevision">Whether to use domain revision.</param>
+        /// <param name="eventRevision">Whether to use event revision.</param>
+        public MediationTree(Domain domain, Problem problem, string path, bool domainRevision, bool eventRevision) : this(domain, problem, path, domainRevision, eventRevision, false) { }
+
+        /// <summary>
+        /// The base constructor.
+        /// </summary>
+        /// <param name="planner">The planner to use.</param>
+        /// <param name="domain">The base domain object.</param>
+        /// <param name="problem">The base problem object.</param>
+        /// <param name="path">The path used to save files to disk.</param>
+        /// <param name="domainRevision">Whether to use domain revision.</param>
+        /// <param name="eventRevision">Whether to use event revision.</param>
+        /// <param name="superpositionManipulation">Whether to use superposition manipulation.</param>
+        public MediationTree (Domain domain, Problem problem, string path, bool domainRevision, bool eventRevision, bool superpositionManipulation)
         {
             // Set the path.
             this.path = path;
 
             // Check each path to see if it exists. If not, create the folder.
-            if (!File.Exists(path))
-                Directory.CreateDirectory(path);
+            if (!File.Exists(path)) Directory.CreateDirectory(path);
 
             // If data already exists, load it from memory.
             if (File.Exists(path + "mediationtree")) data = BinarySerializer.DeSerializeObject<MediationTreeData>(path + "mediationtree");
             // Otherwise, initialize a new tree.
             else
             {
-                data.eventRevision = true;
-                data.domainRevision = true;
+                data.eventRevision = eventRevision;
+                data.domainRevision = domainRevision;
+                data.superpositionManipulation = superpositionManipulation;
 
                 // Store the domain and problem.
                 data.domain = domain;
@@ -187,22 +212,41 @@ namespace Mediation.MediationTree
             MediationTreeNode node = null;
 
             // If the node is a root, initialize a root node.
-            if (incoming == null) node = new MediationTreeNode(domain, problem, 0);
+            if (incoming == null)
+            {
+                if (!data.superpositionManipulation) node = new MediationTreeNode(domain, problem, 0);
+                else node = new VirtualMediationTreeNode(domain, problem, 0);
+            }
             // Otherwise, it is a child node...
             else
             {
                 // Store the current node's ID in the incoming edge.
                 incoming.Child = ++data.nodeCounter;
 
-                // Create the new node object.
-                node = new MediationTreeNode(domain, problem, incoming, GetSuccessorState(incoming), plan, incoming.Child, GetDepth(incoming.Parent) + 1);
+                if (!data.superpositionManipulation) node = new MediationTreeNode(domain, problem, incoming, GetSuccessorState(incoming), plan, incoming.Child, GetDepth(incoming.Parent) + 1);
+                else node = new VirtualMediationTreeNode(domain, problem, incoming, GetSuccessorSuperposition(incoming), plan, incoming.Child, GetDepth(incoming.Parent) + 1);
 
                 // Add the edge to the tree hashtable.
                 data.tree[incoming.Child] = incoming.Parent;
 
                 MediationTreeNode parent = GetNode(incoming.Parent);
-                parent.Outgoing.Find(x => x.Action.Equals(incoming.Action)).Child = node.ID;
+                if (incoming.Action != null) parent.Outgoing.Find(x => x.Action.Equals(incoming.Action)).Child = node.ID;
+                else
+                {
+                    foreach (MediationTreeEdge edge in parent.Outgoing)
+                        if (edge is VirtualMediationTreeEdge)
+                            if ((edge as VirtualMediationTreeEdge).Equals(incoming as VirtualMediationTreeEdge))
+                                edge.Child = node.ID;
+                }
+                
                 SetNode(parent);
+
+                if (data.superpositionManipulation)
+                {
+                    Superposition super = node.State as Superposition;
+                    super.States = SuperpositionManipulator.Collapse(data.player, node as VirtualMediationTreeNode, SuperpositionChooser.ChooseUtility);
+                    node.State = super;
+                }
             }
 
             // If the node is a goal state, iterate the goal state counter.
@@ -304,8 +348,37 @@ namespace Mediation.MediationTree
         /// <returns>A list of outgoing edges.</returns>
         public List<MediationTreeEdge> GetOutgoingEdges (MediationTreeNode node, string actor)
         {
-            // If it's the player's turn, return their list of actions.
-            return StateSpaceTools.GetAllPossibleActions(actor, node);
+            List<MediationTreeEdge> outgoing = StateSpaceTools.GetAllPossibleActions(actor, node);
+            if (!data.superpositionManipulation) return outgoing;
+
+            List<MediationTreeEdge> unobservedActions = new List<MediationTreeEdge>();
+            List<MediationTreeEdge> observedActions = new List<MediationTreeEdge>();
+            foreach (MediationTreeEdge edge in outgoing)
+            {
+                Superposition super = node.State as Superposition;
+                bool obs = false;
+                foreach (State state in super.States)
+                    if (state.Satisfies(edge.Action.Preconditions))
+                        if (KnowledgeAnnotator.Observes(Player, edge.Action, state.Predicates))
+                        {
+                            observedActions.Add(edge);
+                            obs = true;
+                            break;
+                        }
+
+                if (!obs) unobservedActions.Add(edge);
+            }
+
+            if (unobservedActions.Count > 0)
+            {
+                VirtualMediationTreeEdge super = new VirtualMediationTreeEdge();
+                foreach (MediationTreeEdge unobserved in unobservedActions)
+                    super.Actions.Add(unobserved.Action as Operator);
+                super.Parent = node.ID;
+                observedActions.Add(super);
+            }
+
+            return observedActions;
         }
 
         /// <summary>
@@ -391,6 +464,29 @@ namespace Mediation.MediationTree
         {
             // Apply the edge's action to the parent state and return the result.
             return GetNode(edge.Parent).State.NewState(edge.Action as Operator, data.problem.Objects);
+        }
+
+        public State GetSuccessorSuperposition (MediationTreeEdge edge)
+        {
+            VirtualMediationTreeNode parent = GetNode(edge.Parent) as VirtualMediationTreeNode;
+            Superposition pred = parent.State as Superposition;
+            Superposition super = new Superposition();
+            if (edge is VirtualMediationTreeEdge)
+            {
+                VirtualMediationTreeEdge vEdge = edge as VirtualMediationTreeEdge;
+                foreach (State state in pred.States)
+                    foreach (Operator action in vEdge.Actions)
+                        if (state.Satisfies(action.Preconditions))
+                            super.States.Add(state.NewState(action, data.problem.Objects));
+            }
+            else
+            {
+                foreach (State state in pred.States)
+                    if (state.Satisfies(edge.Action.Preconditions))
+                        super.States.Add(state.NewState(edge.Action as Operator, data.problem.Objects));
+            }
+
+            return super;
         }
 
         /// <summary>

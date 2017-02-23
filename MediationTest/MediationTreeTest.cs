@@ -4,6 +4,8 @@ using Mediation.PlanTools;
 using Mediation.MediationTree;
 using Mediation.FileIO;
 using Mediation.Enums;
+using System.Collections.Generic;
+using Mediation.Interfaces;
 
 namespace MediationTest
 {
@@ -15,7 +17,9 @@ namespace MediationTest
         Domain testDomain;
         Problem testProblem;
         MediationTree tree;
-        string path;
+        string pathEvent;
+        string pathDomain;
+        string pathSuper;
 
         public MediationTreeTest()
         {
@@ -23,13 +27,52 @@ namespace MediationTest
             testDomainDirectory = Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl";
             testDomain = Parser.GetDomain(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl", PlanType.StateSpace);
             testProblem = Parser.GetProblemWithTypes(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\prob01.pddl", testDomain);
-            path = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\";
+            pathEvent = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\event\";
+            pathDomain = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\domain\";
+            pathSuper = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\super\";
+        }
+
+        [TestMethod]
+        public void SuperpositionManipulationTest()
+        {
+            tree = new MediationTree(testDomain, testProblem, pathSuper, false, false, true);
+            List<VirtualMediationTreeEdge> supers = new List<VirtualMediationTreeEdge>();
+            foreach (MediationTreeEdge edge in tree.Root.Outgoing)
+                if (edge is VirtualMediationTreeEdge) supers.Add(edge as VirtualMediationTreeEdge);
+            Assert.AreEqual(supers.Count, 1);
+
+            VirtualMediationTreeNode node = tree.GetNode(tree.Root.Domain, tree.Root.Problem, supers[0]) as VirtualMediationTreeNode;
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing.Find(x => x.Action.Name.Equals("toggle-green"))) as VirtualMediationTreeNode;
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing[0]) as VirtualMediationTreeNode;
+            Assert.IsTrue(node.Outgoing.Count > 1);
+
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing.Find(x => x.Action.Name.Equals("toggle-red"))) as VirtualMediationTreeNode;
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing[0]) as VirtualMediationTreeNode;
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing.Find(x => x.Action.Name.Equals("toggle-green"))) as VirtualMediationTreeNode;
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing[0]) as VirtualMediationTreeNode;
+
+            Predicate term = new Predicate("used", new List<ITerm> { new Term("terminal1", true), new Term("boss", true) }, true);
+            Predicate term2 = new Predicate("used", new List<ITerm> { new Term("terminal2", true), new Term("boss", true) }, true);
+            Predicate term3 = new Predicate("has", new List<ITerm> { new Term("snake", true), new Term("c4", true) }, true);
+            Predicate bossGear = new Predicate("at", new List<ITerm> { new Term("boss", true), new Term("gear", true) }, true);
+
+            Superposition super = node.State as Superposition;
+            Assert.IsTrue(super.IsUndetermined(term));
+            Assert.IsTrue(super.IsUndetermined(term2));
+            Assert.IsFalse(super.IsUndetermined(term3));
+
+            node = tree.GetNode(node.Domain, node.Problem, node.Outgoing.Find(x => x.Action.Name.Equals("move-location"))) as VirtualMediationTreeNode;
+            super = node.State as Superposition;
+            Assert.IsFalse(super.IsUndetermined(term));
+
+            if (super.IsFalse(bossGear)) Assert.IsTrue(super.IsUndetermined(term2));
+            else Assert.IsFalse(super.IsUndetermined(term2));
         }
 
         [TestMethod]
         public void EventRevisionTest()
         {
-            tree = new MediationTree(testDomain, testProblem, path);
+            tree = new MediationTree(testDomain, testProblem, pathEvent, false, true);
             MediationTreeNode child = tree.GetNode(tree.Root.Domain, tree.Root.Problem, tree.Root.Outgoing.Find(x => x.Action.Name.Equals("move-location") && x.Action.TermAt(1).Equals("right")));
 
             Assert.AreEqual(child.Outgoing.Count, 2);
@@ -53,7 +96,7 @@ namespace MediationTest
         [TestMethod]
         public void DomainRevisionTest()
         {
-            tree = new MediationTree(testDomain, testProblem, path);
+            tree = new MediationTree(testDomain, testProblem, pathDomain, true, false);
             MediationTreeNode child = tree.GetNode(tree.Root.Domain, tree.Root.Problem, tree.Root.Outgoing.Find(x => x.Action.Name.Equals("move-location") && x.Action.TermAt(1).Equals("right")));
 
             Assert.AreEqual(child.Outgoing.Count, 2);
@@ -87,7 +130,7 @@ namespace MediationTest
         [TestMethod]
         public void MediationTreeRootTest()
         {
-            tree = new MediationTree(testDomain, testProblem, path);
+            tree = new MediationTree(testDomain, testProblem, pathEvent);
             Assert.AreEqual(tree.Root.Outgoing.Count, 4);
             Assert.AreEqual(tree.Root.Outgoing.FindAll(x => x.ActionType == ActionType.Constituent).Count, 1);
         }
@@ -95,7 +138,7 @@ namespace MediationTest
         [TestMethod]
         public void MediationTreeUpdateTest()
         {
-            tree = new MediationTree(testDomain, testProblem, path);
+            tree = new MediationTree(testDomain, testProblem, pathEvent);
             MediationTreeNode child = tree.GetNode(tree.Root.Domain, tree.Root.Problem, tree.Root.Outgoing.Find(x => x.ActionType == ActionType.Constituent));
 
             Assert.AreEqual(child.Outgoing.Count, 2);

@@ -12,14 +12,14 @@ namespace Mediation.MediationTree
     [Serializable]
     public class MediationTreeEdge
     {
-        private ActionType actionType;
+        protected ActionType actionType;
         public ActionType ActionType
         {
             get { return actionType; }
             set { actionType = value; }
         }
 
-        private Operator action;
+        protected Operator action;
         // Access the edge's action.
         public IOperator Action
         {
@@ -27,7 +27,7 @@ namespace Mediation.MediationTree
             set { action = value as Operator; }
         }
 
-        private int parent;
+        protected int parent;
         // Access the edge's outgoing node.
         public int Parent
         {
@@ -35,7 +35,7 @@ namespace Mediation.MediationTree
             set { parent = value; }
         }
 
-        private int child;
+        protected int child;
         // Access the edge's incoming node.
         public int Child
         {

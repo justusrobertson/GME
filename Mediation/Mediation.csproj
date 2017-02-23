@@ -90,6 +90,11 @@
     <Compile Include="MediationTree\MediationTreeData.cs" />
     <Compile Include="MediationTree\MediationTreeEdge.cs" />
     <Compile Include="MediationTree\MediationTreeNode.cs" />
+    <Compile Include="MediationTree\Superposition.cs" />
+    <Compile Include="MediationTree\SuperpositionChooser.cs" />
+    <Compile Include="MediationTree\SuperpositionManipulator.cs" />
+    <Compile Include="MediationTree\VirtualMediationTreeEdge.cs" />
+    <Compile Include="MediationTree\VirtualMediationTreeNode.cs" />
     <Compile Include="Planners\FDMulti.cs" />
     <Compile Include="Planners\Glaive.cs" />
     <Compile Include="Planners\PlannerInterface.cs" />
@@ -119,6 +124,8 @@
     <Compile Include="StateSpace\StateSpaceSearchTools.cs" />
     <Compile Include="StateSpace\StateSpaceTools.cs" />
     <Compile Include="Utilities\EnumerableExtension.cs" />
+    <Compile Include="Utilities\PredicateComparer.cs" />
+    <Compile Include="Utilities\PredicateListComparer.cs" />
     <Compile Include="Utilities\Tuple.cs" />
   </ItemGroup>
   <ItemGroup>

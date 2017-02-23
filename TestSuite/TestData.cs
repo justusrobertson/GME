@@ -10,8 +10,19 @@ namespace TestSuite
     [Serializable]
     public struct TestData
     {
+        /// <summary>
+        /// The number of milliseconds elapsed since search began.
+        /// </summary>
         public long elapsedMilliseconds;
+
+        /// <summary>
+        /// The list of nodes on the search frontier.
+        /// </summary>
         public List<int> frontier;
+
+        /// <summary>
+        /// To what depth level the tree has been generated.
+        /// </summary>
         public int depth;
 
         /// <summary>
@@ -29,7 +40,14 @@ namespace TestSuite
         /// </summary>
         public int deadEndCount;
 
-        // Save the summaries of each build.
+        /// <summary>
+        /// How many records to skip before taking a summary.
+        /// </summary>
+        public int summarySkip;
+
+        /// <summary>
+        /// The list of summaries.
+        /// </summary>
         public List<List<Tuple<String, String>>> summaries;
     }
 }

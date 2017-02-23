@@ -60,6 +60,7 @@
     <Compile Include="MediationTreeTest.cs" />
     <Compile Include="OperatorTest.cs" />
     <Compile Include="ParserTest.cs" />
+    <Compile Include="PlannerTest.cs" />
     <Compile Include="PlanSimulatorTest.cs" />
     <Compile Include="PlanTest.cs" />
     <Compile Include="PredicateTest.cs" />

@@ -107,10 +107,9 @@ namespace TestSuite
         }
 
         // Generates an excel spreadsheet with graphs of each summary element by depth and saves each graph as a PNG file.
-        public static void CreateGraphs (string domainName, string timeStamp, int depth, List<List<Tuple<String, String>>> summaries)
+        public static void CreateGraphs (string domainName, string timeStamp, int depth, string directory, List<List<Tuple<String, String>>> summaries)
         {
-            // The top level log directory.
-            string directory = Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + timeStamp + @"\";
+            directory += timeStamp + @"\";
 
             // The graph image directory.
             string imageDir = directory + @"graphs\";

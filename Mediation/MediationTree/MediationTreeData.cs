@@ -10,6 +10,7 @@ namespace Mediation.MediationTree
     {
         public bool eventRevision;
         public bool domainRevision;
+        public bool superpositionManipulation;
 
         /// <summary>
         /// Stores the current highest node ID.

@@ -8,6 +8,7 @@ using Mediation.StateSpace;
 using Mediation.GameTree;
 using Mediation.PlanSpace;
 using Mediation.Utilities;
+using Mediation.MediationTree;
 
 namespace Mediation.FileIO
 {
@@ -404,6 +405,47 @@ namespace Mediation.FileIO
                     summary.Add(lastTuple);
                 }
             }
+        }
+
+        // Given a mediation node, creates an HTML representation of its initial state.
+        public static void ToHTML(string directory, Superposition super)
+        {
+            /*string file = directory + "super.html";
+
+            using (StreamWriter writer = new StreamWriter(file, false))
+            {
+                writer.WriteLine("<html>");
+                writer.WriteLine("<head><style>td { text-align:center }</style></head>");
+                writer.WriteLine("<body>");
+                writer.WriteLine("<table text-align=\"center\">");
+                foreach (IPredicate key in super.Table.Keys)
+                {
+                    writer.WriteLine("<tr><th colspan=\"2\">" + key + "</th><th colspan=\"2\">(not " + key + ")</th></tr><tr><th>TRUE</th><th>FALSE</th><th>TRUE</th><th>FALSE</th></tr>");
+                    List<IPredicate> tt = super.GetContents(key, super.TrueTrue);
+                    List<IPredicate> tf = super.GetContents(key, super.TrueFalse);
+                    List<IPredicate> ft = super.GetContents(key, super.FalseTrue);
+                    List<IPredicate> ff = super.GetContents(key, super.FalseFalse);
+
+                    int max = Math.Max(tt.Count, Math.Max(tf.Count, Math.Max(ft.Count, ff.Count)));
+
+                    for (int i = 0; i < max; i++)
+                    {
+                        writer.WriteLine("<tr>");
+                        if (i < tt.Count) writer.WriteLine("<td>" + tt[i] + "</td>");
+                        else writer.WriteLine("<td> </td>");
+                        if (i < tf.Count) writer.WriteLine("<td>" + tf[i] + "</td>");
+                        else writer.WriteLine("<td> </td>");
+                        if (i < ft.Count) writer.WriteLine("<td>" + ft[i] + "</td>");
+                        else writer.WriteLine("<td> </td>");
+                        if (i < ff.Count) writer.WriteLine("<td>" + ff[i] + "</td>");
+                        else writer.WriteLine("<td> </td>");
+                        writer.WriteLine("</tr>");
+                    }
+                }
+                writer.WriteLine("</table>");
+                writer.WriteLine("</body>");
+                writer.WriteLine("</html>");
+            }*/
         }
     }
 }

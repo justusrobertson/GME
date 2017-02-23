@@ -21,6 +21,7 @@
 		(destroyed ?object - object)
 		(destroyed ?item - item)
 		(linked ?phone - phone)
+		(used ?computer - computer ?user - character)
 		(on ?explosive - explosive ?object - object)
 	)
 

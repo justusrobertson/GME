@@ -7,6 +7,7 @@ using System.Threading;
 using Mediation.Interfaces;
 using Mediation.PlanTools;
 using System.Collections;
+using Mediation.Utilities;
 
 namespace Mediation.KnowledgeTools
 {
@@ -43,6 +44,7 @@ namespace Mediation.KnowledgeTools
             foreach (IPredicate obs in observedPossibles)
                 if (!stateChecker.ContainsKey(obs.ToString()))
                     obs.Sign = false;
+            observedPossibles.Sort(PredicateComparer.InverseCompareByName);
             return observedPossibles;
         }
 
@@ -120,6 +122,29 @@ namespace Mediation.KnowledgeTools
 
             // Otherwise, return false.
             return false;
+        }
+
+        // Checks to see if there has been a change in the character's knowledge state.
+        public static bool HasChanged(string character, List<IPredicate> state1, List<IPredicate> state2)
+        {
+            List<IPredicate> obs1 = KnowledgeState(state1, character);
+            List<IPredicate> obs2 = KnowledgeState(state2, character);
+
+            if (obs1.Except<IPredicate>(obs2).ToList<IPredicate>().Count > 0 || obs2.Except<IPredicate>(obs1).ToList<IPredicate>().Count > 0) return true;
+
+            return false;
+        }
+
+        // Checks to see if there has been a change in the character's knowledge state.
+        public static List<IPredicate> KnowledgeChange (string character, List<IPredicate> state1, List<IPredicate> state2)
+        {
+            List<IPredicate> obs1 = KnowledgeState(state1, character);
+            List<IPredicate> obs2 = KnowledgeState(state2, character);
+            List<IPredicate> newObs = new List<IPredicate>();
+
+            newObs.AddRange(obs1.Except<IPredicate>(obs2).ToList<IPredicate>());
+            newObs.AddRange(obs2.Except<IPredicate>(obs1).ToList<IPredicate>());
+            return newObs;
         }
 
         // Returns the location of an object given a state.

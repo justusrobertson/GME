@@ -12,17 +12,17 @@ namespace Mediation.MediationTree
     [Serializable]
     public class MediationTreeNode
     {
-        private MediationTreeEdge incoming;
-        private State state;
-        private Plan plan;
-        private List<MediationTreeEdge> outgoing;
-        private Problem problem;
-        private Domain domain;
-        private int id;
+        protected MediationTreeEdge incoming;
+        protected State state;
+        protected Plan plan;
+        protected List<MediationTreeEdge> outgoing;
+        protected Problem problem;
+        protected Domain domain;
+        protected int id;
 
-        private bool satisfiesGoal;
+        protected bool satisfiesGoal;
 
-        private int depth;
+        protected int depth;
 
         public State State
         {
@@ -85,6 +85,8 @@ namespace Mediation.MediationTree
             }
         }
 
+        public MediationTreeNode() { }
+
         public MediationTreeNode(Domain domain, Problem problem, int id) : this(domain, problem, null, new State(problem.Initial, null, null), null, id, 0) { }
 
         public MediationTreeNode(Domain domain, Problem problem, Plan plan, int id) : this (domain, problem, null, new State(problem.Initial, null, null), plan, id, 0) { }
@@ -111,7 +113,7 @@ namespace Mediation.MediationTree
             UpdatePlan();
         }
 
-        private void UpdatePlan ()
+        protected virtual void UpdatePlan ()
         {
             if (incoming != null)
             {
