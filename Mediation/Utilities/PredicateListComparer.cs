@@ -8,10 +8,23 @@ namespace Mediation.Utilities
 {
     public class PredicateListComparer : IEqualityComparer<List<IPredicate>>
     {
+        /// <summary>
+        /// Returns whether two lists of literals are equal.
+        /// </summary>
+        /// <param name="x">The first set of literals.</param>
+        /// <param name="y">The second set of literals.</param>
+        /// <returns></returns>
         public bool Equals (List<IPredicate> x, List<IPredicate> y)
         {
+            // Loop through each literal in the first list.
             foreach (IPredicate pred in x)
+                // If the literal is not present in the second list, return false.
                 if (!y.Contains(pred)) return false;
+
+            // Loop through each literal in the second list.
+            foreach (IPredicate pred in y)
+                // If the literal is not present in the first list, return false.
+                if (!x.Contains(pred)) return false;
 
             return true;
         }
