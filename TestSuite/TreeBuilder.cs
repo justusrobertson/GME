@@ -34,7 +34,7 @@ namespace TestSuite
             MediationTree tree = new MediationTree (domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\" + modifier + @"\", domainRevision, eventRevision, superposition);
 
             // Remember the game tree path.
-            string dataPath = Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + modifier + @"\";
+            string dataPath = Parser.GetTopDirectory() + @"TestLogs\Iterative\" + domainName + @"\" + modifier + @"\";
 
             // Check each path to see if it exists. If not, create the folder.
             if (!File.Exists(dataPath))
@@ -73,7 +73,7 @@ namespace TestSuite
                     data.frontier.Add(child.ID);
                     expand--;
                     watch.Stop();
-                    if (data.nodeCounter % data.summarySkip == 0) data.summaries.Add(WriteTree(domainName, data));
+                    if (data.nodeCounter % data.summarySkip == 0) data.summaries.Add(CreateSummary(data));
                     watch.Start();
                 }
                 data.frontier.RemoveAt(0);
@@ -160,65 +160,89 @@ namespace TestSuite
         }
 
         // Creates a single tree of specified depth without specifying a folder name.
-        public static void BreadthFirst (string domainName, int endDepth)
+        public static void BreadthFirst (string domainName, int endDepth, bool domainRevision, bool eventRevision, bool superposition)
         {
-            // Save the summaries of each build.
-            List<List<Tuple<String, String>>> summaries = new List<List<Tuple<String, String>>>();
+            string modifier = "vanilla";
+            if (domainRevision && eventRevision) modifier = "domain-event";
+            else if (domainRevision) modifier = "domain";
+            else if (eventRevision) modifier = "event";
+            else if (superposition) modifier = "superposition";
 
-            // Remember a time stamp for the top directory.
-            string timeStamp = DateTime.Now.ToString("MM-dd-yyyy-HH-mm-tt");
-
-            // Read in the domain file.
+            // Parse the domain file.
             Domain domain = Parser.GetDomain(Parser.GetTopDirectory() + @"Benchmarks\" + domainName + @"\domain.pddl", PlanType.StateSpace);
 
-            // Read in the problem file.
-            Problem problem = Parser.GetProblem(Parser.GetTopDirectory() + @"Benchmarks\" + domainName + @"\prob01.pddl");
+            // Parse the problem file.
+            Problem problem = Parser.GetProblemWithTypes(Parser.GetTopDirectory() + @"Benchmarks\" + domainName + @"\prob01.pddl", domain);
 
-            // Create a stopwatch object.
+            // Create the initial node of mediation space.
+            MediationTree tree = new MediationTree(domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\" + modifier + @"\", domainRevision, eventRevision, superposition);
+
+            // Remember the game tree path.
+            string dataPath = Parser.GetTopDirectory() + @"TestLogs\Level\" + domainName + @"\" + modifier + @"\";
+
+            // Check each path to see if it exists. If not, create the folder.
+            if (!File.Exists(dataPath))
+                Directory.CreateDirectory(dataPath);
+
+            TestData data = new TestData();
+
             Stopwatch watch = new Stopwatch();
 
-            // Start the stopwatch.
-            watch.Start();
+            Console.WriteLine("Creating a " + modifier + " tree to level " + endDepth);
 
-            // Find an initial plan.
-            Plan plan = FastDownward.Plan(domain, problem);
-
-            // Create the root node.
-            StateSpaceNode root = StateSpaceSearchTools.CreateNode(Planner.FastDownward, domain, problem, plan, plan.Initial as State);
-
-            // Stop the stopwatch.
-            watch.Stop();
-
-            // Create the frontier.
-            List<StateSpaceNode> frontier = new List<StateSpaceNode>() { root };
-
-            // Loop through the depths.
-            for (int depth = 0; depth < endDepth; depth++)
+            // If data already exists, load it from memory.
+            if (File.Exists(dataPath + "mediationtreedata")) data = BinarySerializer.DeSerializeObject<TestData>(dataPath + "mediationtreedata");
+            else
             {
-                // Print the current tree.
-                summaries.Add(WriteTree(domainName, timeStamp, depth, watch, root));
-
-                // Start the watch.
-                watch.Start();
-
-                // Create the new frontier.
-                List<StateSpaceNode> newFrontier = StateSpaceMediator.BuildLayer(Planner.FastDownward, frontier);
-
-                // Update the frontier.
-                frontier = newFrontier;
-
-                // Stop the watch.
-                watch.Stop();
+                data.elapsedMilliseconds = 0;
+                data.frontier = new List<int>() { 0 };
+                data.depth = 0;
+                data.nodeCounter = 1;
+                data.goalStateCount = 0;
+                data.deadEndCount = 0;
+                data.summarySkip = 1000;
+                data.summaries = new List<List<Tuple<string, string>>>();
             }
 
-            // Print the current tree.
-            summaries.Add(WriteTree(domainName, timeStamp, endDepth, watch, root));
+            Console.WriteLine("Beginning at level " + data.depth);
+            Console.WriteLine("Beginning at node number " + data.nodeCounter);
 
-            // Write the summary CSV file to disk.
-            WriteSummary(domainName, timeStamp, summaries);
+            watch.Start();
 
-            // Use the CSV file to create an Excel spreadsheet and graphs of each summary element.
-            Grapher.CreateGraphs(domainName, timeStamp, endDepth + 2, Parser.GetTopDirectory() + @"TestLogs\" + domainName + @"\" + timeStamp + @"\", summaries);
+            while (endDepth - data.depth > 0 && data.frontier.Count > 0)
+            {
+                MediationTreeNode current = tree.GetNode(data.frontier[0]);
+                foreach (MediationTreeEdge edge in current.Outgoing)
+                {
+                    bool newDepth = false;
+                    MediationTreeNode child = tree.GetNode(current.Domain, current.Problem, edge);
+                    if (child.Depth > data.depth)
+                    {
+                        data.depth = child.Depth;
+                        newDepth = true;
+                        Console.WriteLine("Reached level " + data.depth);
+                    }
+                    data.nodeCounter++;
+                    if (child.IsGoal) data.goalStateCount++;
+                    if (child.DeadEnd) data.deadEndCount++;
+                    data.frontier.Add(child.ID);
+                    watch.Stop();
+                    if (newDepth) data.summaries.Add(CreateSummary(data));
+                    watch.Start();
+                }
+                data.frontier.RemoveAt(0);
+                data.elapsedMilliseconds += watch.ElapsedMilliseconds;
+                watch.Reset();
+                BinarySerializer.SerializeObject<TestData>(dataPath + "mediationtreedata", data);
+                if (data.nodeCounter % 1000 == 0) Console.WriteLine("Reached node number " + data.nodeCounter);
+                watch.Start();
+            }
+
+            watch.Stop();
+            int size = data.summaries.Count + 1;
+            BinarySerializer.SerializeObject<TestData>(dataPath + "mediationtreedata", data);
+            WriteSummary(@"\Level\" + domainName + @"\" + modifier, data.nodeCounter.ToString(), data.summaries);
+            if (data.summaries.Count > 0) Grapher.CreateGraphs(domainName, data.nodeCounter.ToString(), size, dataPath, data.summaries);
         }
 
         // Creates multiple tree depths, starting with zero.
@@ -388,20 +412,9 @@ namespace TestSuite
             return summary;
         }
 
-        // Writes a game tree to disk with a summary file.
-        private static List<Tuple<String, String>> WriteTree (string domainName, TestData data)
+        // Creates a game tree summary.
+        private static List<Tuple<String, String>> CreateSummary (TestData data)
         {
-            // Create the path information.
-            string outputDir = Parser.GetTopDirectory() + @"TestLogs\";
-            string domainDir = outputDir + domainName + @"\";
-
-            // Check each path to see if it exists. If not, create the folder.
-            if (!File.Exists(outputDir))
-                Directory.CreateDirectory(outputDir);
-
-            if (!File.Exists(domainDir))
-                Directory.CreateDirectory(domainDir);
-
             // Create the summary elements and populate their values.
             List<Tuple<String, String>> summary = new List<Tuple<String, String>>();
             summary.Add(new Tuple<String, String>("Nodes Expanded", data.nodeCounter.ToString()));
@@ -464,7 +477,9 @@ namespace TestSuite
 
         static void Main (string[] args)
         {
-            MediationTreeBuilder("spy-types", 9000, false, false, true);
+            //MediationTreeBuilder("spy-types", 9000, false, false, true);
+            BreadthFirst("batman", 18, false, true, false);
+            SingleTree("batman", 18);
         }
     }
 }

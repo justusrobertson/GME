@@ -27,9 +27,9 @@ namespace MediationTest
             testDomainDirectory = Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl";
             testDomain = Parser.GetDomain(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\domain.pddl", PlanType.StateSpace);
             testProblem = Parser.GetProblemWithTypes(Parser.GetTopDirectory() + @"Benchmarks\" + testDomainName + @"\prob01.pddl", testDomain);
-            pathEvent = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\event\";
-            pathDomain = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\domain\";
-            pathSuper = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\super\";
+            pathEvent = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\Spy\event\";
+            pathDomain = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\Spy\domain\";
+            pathSuper = Parser.GetTopDirectory() + @"MediationTrees\Data\Unit-Tests\Spy\super\";
         }
 
         [TestMethod]
@@ -122,7 +122,7 @@ namespace MediationTest
             child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("toggle-green")));
             child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("link-phone")));
             child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("place-explosive-thing") && x.Action.TermAt(2).Equals("terminal1")));
-            child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("do nothing")));
+            child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("do-nothing")));
             child = tree.GetNode(child.Domain, child.Problem, child.Outgoing.Find(x => x.Action.Name.Equals("detonate-explosive")));
             Assert.IsTrue(child.DeadEnd);
         }

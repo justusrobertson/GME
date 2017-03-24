@@ -238,7 +238,7 @@ namespace Mediation.StateSpace
             }
 
             // Otherwise, return a blank step as the user's constituent action.
-            Operator wait = new Operator("do nothing");
+            Operator wait = new Operator("do-nothing");
             wait.Terms.Add(new Term("actor", problem.Player, "character"));
             return new StateSpaceEdge(wait, ActionType.Constituent);
         }
@@ -426,7 +426,7 @@ namespace Mediation.StateSpace
             }
 
             // Otherwise, return a blank step as the user's constituent action.
-            Operator wait = new Operator("do nothing");
+            Operator wait = new Operator("do-nothing");
             wait.Terms.Add(new Term("actor", actor, "character"));
             return new MediationTreeEdge (wait, ActionType.Constituent, node.ID);
         }

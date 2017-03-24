@@ -91,7 +91,8 @@ namespace Mediation.MediationTree
                 string[] title = step.Name.Split('*');
 
                 // Find the operator template in the original domain that matches the event revision action.
-                Operator template = domain.Operators.Find(x => x.Name.Equals(title[0])).Template() as Operator;
+                Operator template = new Operator("do-nothing");
+                if (!title[0].Equals("do-nothing")) template = domain.Operators.Find(x => x.Name.Equals(title[0])).Template() as Operator;
 
                 // If this is a proper event revision action...
                 if (title.Length > 1)
@@ -221,6 +222,20 @@ namespace Mediation.MediationTree
                 // Add the template to the list of templates.
                 newTemplates.Add(newOp);
             }
+
+            // Add the no op.
+            Operator noOp = new Operator("do-nothing*" + actor + "*" + depth);
+
+            // Add a precondition that specifies the state depth of the operator.
+            noOp.Preconditions.Add(new Predicate("state-depth", new List<ITerm> { new Term("depth" + depth.ToString(), true) }, true));
+
+            // Remove the current state tracker.
+            noOp.Effects.Add(new Predicate("state-depth", new List<ITerm> { new Term("depth" + depth.ToString(), true) }, false));
+
+            // Add an updated state tracker.
+            noOp.Effects.Add(new Predicate("state-depth", new List<ITerm> { new Term("depth" + (depth + 1).ToString(), true) }, true));
+
+            newTemplates.Add(noOp);
 
             // Return the list of templates.
             return newTemplates;

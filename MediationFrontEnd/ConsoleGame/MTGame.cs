@@ -491,7 +491,7 @@ namespace MediationFrontEnd.ConsoleGame
             // Loop through the outgoing edges...
             foreach (MediationTreeEdge edge in current.Outgoing)
                 // Identify 
-                if (edge.Action.Name.Equals("do nothing"))
+                if (edge.Action.Name.Equals("do-nothing"))
                     if (frontier.ContainsKey(edge)) current = frontier[edge] as MediationTreeNode;
                     else current = tree.GetNode(current.Domain, current.Problem, edge);
 

@@ -463,7 +463,7 @@ namespace MediationFrontEnd.ConsoleGame
             // Loop through the outgoing edges...
             foreach (StateSpaceEdge edge in root.outgoing)
                 // Identify 
-                if (edge.Action.Name.Equals("do nothing"))
+                if (edge.Action.Name.Equals("do-nothing"))
                 {
                     if (frontier.ContainsKey(edge))
                     {
