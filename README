@@ -60,7 +60,6 @@ Step 1: Download Fast Downward from Mercurial. Travel to the following link:
 http://hg.fast-downward.org/rev/e6caa678ba36
 
 and click 'zip' in the sidebar. More information about Fast Downward can be found here:
-
 http://www.fast-downward.org/ObtainingAndRunningFastDownward
 
 Step 1: Install 32-bit Cygwin installer. Make sure it's the 32-bit installer, no matter what version of Windows you have!
