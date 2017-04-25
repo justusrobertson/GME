@@ -56,8 +56,11 @@ In order for the system to work correctly, it needs a planner to generate linear
 
 This section details how to install and run Fast Downward on a Windows 10 machine.
 
-Step 1: Download Fast Downward from its Git repository. I use commit number e6caa678ba36.
-https://github.com/danfis/fast-downward
+Step 1: Download Fast Downward from Mercurial. Travel to the following link:
+http://hg.fast-downward.org/rev/e6caa678ba36
+
+and click 'zip' in the sidebar. More information about Fast Downward can be found here:
+
 http://www.fast-downward.org/ObtainingAndRunningFastDownward
 
 Step 1: Install 32-bit Cygwin installer. Make sure it's the 32-bit installer, no matter what version of Windows you have!
