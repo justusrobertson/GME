@@ -199,7 +199,7 @@ namespace MediationFrontEnd.ConsoleGame
             Console.WriteLine("Welcome to " + domain.Name);
 
             // Create the initial node of mediation space.
-            tree = new MediationTree (domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\");
+            tree = new MediationTree (domain, problem, Parser.GetTopDirectory() + @"MediationTrees\Data\" + domain.Name + @"\", false, false, false);
 
             if (debug)
             {
@@ -224,7 +224,7 @@ namespace MediationFrontEnd.ConsoleGame
 
             // Present the initial state.
             command = "";
-            Look();
+            Look(false);
 
             // Loop while this is false.
             bool exit = false;
@@ -270,7 +270,7 @@ namespace MediationFrontEnd.ConsoleGame
                         Console.Clear();
                         break;
                     case "look":
-                        Look();
+                        Look(true);
                         break;
                     case "help":
                         Help();
@@ -344,7 +344,7 @@ namespace MediationFrontEnd.ConsoleGame
         /// <summary>
         /// Provides a description of what the player currently sees.
         /// </summary>
-        public static void Look()
+        public static void Look(Boolean wipeScreen)
         {
             if (current.DeadEnd) return;
 
@@ -352,7 +352,8 @@ namespace MediationFrontEnd.ConsoleGame
                 while (!tree.GetTurnAtIndex(current.Depth).Equals(current.Problem.Player)) TakeTurn();
 
             // Initialize the output string to a new line.
-            string outp = System.Environment.NewLine;
+            String actionDescription = "";
+            String stateDescription = Environment.NewLine;
 
             // Create a list of predicates to represent the current state.
             List<IPredicate> state = new List<IPredicate>();
@@ -369,14 +370,14 @@ namespace MediationFrontEnd.ConsoleGame
                 probObs.Add((Obj)obj.Clone());
 
             if (command.Equals("look"))
-                Console.Out.WriteLine();
+                actionDescription += Environment.NewLine;
 
             state = KnowledgeAnnotator.Annotate(state, tree.GetTurnAtIndex(current.Depth));
 
             // If the player did not ask to look at their surroundings...
             if (!command.Equals("look"))
             {
-                Console.Out.WriteLine("Your name is " + tree.GetTurnAtIndex(current.Depth) + "." + Environment.NewLine);
+                actionDescription += "Your name is " + tree.GetTurnAtIndex(current.Depth) + "." + Environment.NewLine;
 
                 // Actions that took place.
                 List<IOperator> actions = computerActions;
@@ -397,21 +398,21 @@ namespace MediationFrontEnd.ConsoleGame
                         // Add the action to the output.
                         if (action.TermAt(0).Equals(tree.GetTurnAtIndex(current.Depth)))
                         {
-                            Console.Out.Write("You ");
+                            actionDescription += "You ";
                             string[] splitName = action.Name.Split('-');
-                            Console.Out.Write(splitName[0] + " ");
+                            actionDescription += splitName[0] + " ";
                             for (int i = 1; i < action.Name.Count(x => x == '-') + 1; i++)
-                                Console.Out.Write(UppercaseFirst(action.TermAt(i)) + " ");
-                            Console.Out.WriteLine();
+                                actionDescription += UppercaseFirst(action.TermAt(i)) + " ";
+                            actionDescription += Environment.NewLine;
                         }
                         else
                         {
-                            Console.Out.Write("You see " + action.TermAt(0) + " ");
+                            actionDescription += "You see " + action.TermAt(0) + " ";
                             string[] splitName = action.Name.Split('-');
-                            Console.Out.Write(splitName[0] + " ");
+                            actionDescription += splitName[0] + " ";
                             for (int i = 1; i < action.Name.Count(x => x == '-') + 1; i++)
-                                Console.Out.Write(UppercaseFirst(action.TermAt(i)) + " ");
-                            Console.Out.WriteLine();
+                                actionDescription += UppercaseFirst(action.TermAt(i)) + " ";
+                            actionDescription += Environment.NewLine;
                         }
 
                         // Add each action effect to the output.
@@ -419,46 +420,49 @@ namespace MediationFrontEnd.ConsoleGame
                             if (effect.Name.Equals("at"))
                             {
                                 if (effect.Sign)
-                                    Console.Out.WriteLine("".PadLeft(5) + UppercaseFirst(effect.TermAt(0).Constant) + " is at the " + UppercaseFirst(effect.TermAt(1).Constant));
+                                    actionDescription += "".PadLeft(5) + UppercaseFirst(effect.TermAt(0).Constant) + " is at the " + UppercaseFirst(effect.TermAt(1).Constant);
                                 else
-                                    Console.Out.WriteLine("".PadLeft(5) + UppercaseFirst(effect.TermAt(0).Constant) + " is not at the " + UppercaseFirst(effect.TermAt(1).Constant));
+                                    actionDescription += "".PadLeft(5) + UppercaseFirst(effect.TermAt(0).Constant) + " is not at the " + UppercaseFirst(effect.TermAt(1).Constant);
                             }
                             else
-                            {
-                                Console.Out.WriteLine("".PadLeft(5) + effect.ToString().Replace("(", "").Replace(")", ""));
-                            }
+                                actionDescription += "".PadLeft(5) + effect.ToString().Replace("(", "").Replace(")", "");
 
                         foreach (Axiom conditional in action.Conditionals)
                             foreach (Predicate effect in conditional.Effects)
-                                Console.Out.WriteLine("".PadLeft(5) + effect.ToString().Replace("(", "").Replace(")", ""));
+                                actionDescription += "".PadLeft(5) + effect.ToString().Replace("(", "").Replace(")", "");
 
                         // Add newlines.
-                        Console.Out.WriteLine();
+                        actionDescription += Environment.NewLine;
                     }
                 }
 
                 // Add a description of the current location to the output.
-                outp += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
+                stateDescription += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
             }
             // If the player supplies no arguments...
             else if (command.Equals("look") && arguments.Count == 0)
                 // Provide a description of the current location.
-                outp += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
+                stateDescription += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
             // If the player looks at themself...
             else if (command.Equals("look") && (arguments[0].Equals("me") || arguments[0].Equals(current.Problem.Player)))
                 // Provide a description of the player's character.
-                outp += DiscourseGenerator.PlayerDescription(tree.GetTurnAtIndex(current.Depth), state);
+                stateDescription += DiscourseGenerator.PlayerDescription(tree.GetTurnAtIndex(current.Depth), state);
             // If the player looks at the room...
             else if (command.Equals("look") && (arguments[0].Equals("here") || arguments[0].Equals(KnowledgeAnnotator.GetLocation(current.Problem.Player, current.Problem.Initial))))
                 // Provide a description of the current location.
-                outp += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
+                stateDescription += DiscourseGenerator.RoomDescription(tree.GetTurnAtIndex(current.Depth), state, probObs);
             else
                 // The player can't see it.
-                outp += "You can't see that.";
+                stateDescription += "You can't see that.";
+
+            // Clear the console.
+            if (wipeScreen) Console.Clear();
+
+            Console.Out.WriteLine(actionDescription);
 
             // Format the output string.
-            if (!outp.Equals(""))
-                foreach (string s in Wrap(outp, 79))
+            if (!stateDescription.Equals(""))
+                foreach (string s in Wrap(stateDescription, 79))
                     Console.Out.WriteLine(s);
         }
 
@@ -495,7 +499,7 @@ namespace MediationFrontEnd.ConsoleGame
                     if (frontier.ContainsKey(edge)) current = frontier[edge] as MediationTreeNode;
                     else current = tree.GetNode(current.Domain, current.Problem, edge);
 
-            Look();
+            Look(true);
         }
 
         public static void OneArg()
@@ -538,8 +542,7 @@ namespace MediationFrontEnd.ConsoleGame
                     current = tree.GetNode(current.Domain, current.Problem, matchingEdge);
                 }
 
-                Console.Clear();
-                Look();
+                Look(true);
             }
             else
             {
@@ -584,8 +587,7 @@ namespace MediationFrontEnd.ConsoleGame
                     current = tree.GetNode(current.Domain, current.Problem, matchingEdge);
                 }
 
-                Console.Clear();
-                Look();
+                Look(true);
             }
             else
             {
@@ -615,8 +617,7 @@ namespace MediationFrontEnd.ConsoleGame
             if (matchingEdge != null)
             {
                 current = tree.GetNode(current.Domain, current.Problem, matchingEdge);
-                Console.Clear();
-                Look();
+                Look(true);
             }
             else
             {

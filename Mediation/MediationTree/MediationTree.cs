@@ -306,13 +306,13 @@ namespace Mediation.MediationTree
             // Initialize the character list.
             List<string> characters = new List<string>();
 
+            // Add the player to the list.
+            characters.Add(data.player);
+
             // Loop through the computer controlled characters.
             foreach (string npc in data.npcs)
                 // Add each to the list.
                 characters.Add(npc);
-
-            // Add the player to the list.
-            characters.Add(data.player);
 
             // Return the list.
             return characters;
